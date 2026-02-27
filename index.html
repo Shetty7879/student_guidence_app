@@ -52,6 +52,64 @@
                     <option value="hi">हिंदी</option>
                     <option value="kn">ಕನ್ನಡ</option>
                 </select>
+                <div id="profile-menu-wrapper" class="profile-menu-wrapper hidden">
+                    <button id="profile-btn" class="profile-btn" aria-label="Profile Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </button>
+                    <div id="profile-dropdown" class="profile-dropdown glass-card hidden">
+                        <div class="dropdown-section">
+                            <div class="dropdown-header" data-i18n="prof_sec_profile">Profile Settings</div>
+                            <div class="dropdown-item" id="menu-edit-profile">
+                                <span data-i18n="prof_item_edit">View & Edit Profile</span>
+                            </div>
+                        </div>
+                        <div class="dropdown-section">
+                            <div class="dropdown-header" data-i18n="prof_sec_app">App Settings</div>
+                            <div class="dropdown-item" id="menu-theme-toggle">
+                                <span data-i18n="prof_item_theme">Toggle Theme</span>
+                            </div>
+                            <div class="dropdown-item" id="menu-notifications">
+                                <span data-i18n="prof_item_notifications">Notifications</span>
+                            </div>
+                        </div>
+                        <div class="dropdown-section">
+                            <div class="dropdown-header" data-i18n="prof_sec_guidance">Guidance Settings</div>
+                            <div class="dropdown-item" id="menu-retake">
+                                <span data-i18n="prof_item_retake">Retake Assessment</span>
+                            </div>
+                            <div class="dropdown-item" id="menu-reset">
+                                <span data-i18n="prof_item_reset">Reset Recommendations</span>
+                            </div>
+                            <div class="dropdown-item" id="menu-saved">
+                                <span data-i18n="prof_item_saved">Saved Courses & Exams</span>
+                            </div>
+                        </div>
+                        <div class="dropdown-section">
+                            <div class="dropdown-header" data-i18n="prof_sec_support">Basic Needs & Support</div>
+                            <div class="dropdown-item" id="menu-help">
+                                <span data-i18n="prof_item_help">Help & FAQ</span>
+                            </div>
+                            <div class="dropdown-item" id="menu-feedback">
+                                <span data-i18n="prof_item_feedback">Feedback / Report Issue</span>
+                            </div>
+                            <div class="dropdown-item" id="menu-about">
+                                <span data-i18n="prof_item_about">About App</span>
+                            </div>
+                            <div class="dropdown-item" id="menu-privacy">
+                                <span data-i18n="prof_item_privacy">Privacy & Terms</span>
+                            </div>
+                        </div>
+                        <div class="dropdown-section" style="border-bottom: none;">
+                            <div class="dropdown-item logout-item" id="menu-logout">
+                                <span data-i18n="prof_item_logout">Logout</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 

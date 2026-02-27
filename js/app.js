@@ -8,6 +8,7 @@ const AppState = {
     authValue: '',
     authError: false,
     userName: '',
+    userGender: null,
     selectedLevel: null,
     answers: [],
     language: 'en'
@@ -18,7 +19,10 @@ const DOM = {
     langSelect: document.getElementById('language-select'),
     themeToggleBtn: document.getElementById('theme-toggle'),
     themeIconMoon: document.getElementById('theme-icon-moon'),
-    themeIconSun: document.getElementById('theme-icon-sun')
+    themeIconSun: document.getElementById('theme-icon-sun'),
+    profileWrapper: document.getElementById('profile-menu-wrapper'),
+    profileBtn: document.getElementById('profile-btn'),
+    profileDropdown: document.getElementById('profile-dropdown')
 };
 
 function initApp() {
@@ -37,6 +41,59 @@ function initApp() {
     // Setup Theme listener
     DOM.themeToggleBtn.addEventListener('click', toggleTheme);
 
+    // Profile menu listeners
+    if (DOM.profileBtn) {
+        DOM.profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            DOM.profileDropdown.classList.toggle('hidden');
+        });
+    }
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+        if (!DOM.profileWrapper.contains(e.target) && !DOM.profileDropdown.classList.contains('hidden')) {
+            DOM.profileDropdown.classList.add('hidden');
+        }
+    });
+
+    // Profile Dropdown Actions
+    document.getElementById('menu-logout')?.addEventListener('click', () => {
+        AppState.isAuthenticated = false;
+        AppState.authValue = '';
+        AppState.userName = '';
+        AppState.answers = [];
+        AppState.selectedLevel = null;
+        DOM.profileDropdown.classList.add('hidden');
+        renderScreen('login');
+    });
+
+    document.getElementById('menu-theme-toggle')?.addEventListener('click', () => {
+        toggleTheme();
+    });
+
+    document.getElementById('menu-retake')?.addEventListener('click', () => {
+        if (AppState.isAuthenticated) {
+            DOM.profileDropdown.classList.add('hidden');
+            renderScreen('level_select');
+        }
+    });
+
+    document.getElementById('menu-reset')?.addEventListener('click', () => {
+        if (AppState.isAuthenticated) {
+            AppState.answers = [];
+            AppState.selectedLevel = null;
+            DOM.profileDropdown.classList.add('hidden');
+            renderScreen('welcome');
+        }
+    });
+
+    document.getElementById('menu-language')?.addEventListener('click', () => {
+        DOM.profileDropdown.classList.add('hidden');
+        DOM.langSelect.focus();
+        // Since it's a native select, we can't easily force it to open programmatically without hacky ways, 
+        // so focusing it is the best approach for accessibility.
+    });
+
     // Set initial localization then render
     updateTranslations();
 
@@ -53,6 +110,13 @@ function initApp() {
 function renderScreen(screenName) {
     AppState.currentScreen = screenName;
     DOM.mainArea.innerHTML = ''; // Clear container
+
+    // Update Profile Menu visibility based on Auth state
+    if (AppState.isAuthenticated) {
+        DOM.profileWrapper.classList.remove('hidden');
+    } else {
+        DOM.profileWrapper.classList.add('hidden');
+    }
 
     let template = '';
 
@@ -147,13 +211,22 @@ function renderLoginScreen() {
     const nextAuthType = isSignUp ? 'signin' : 'signup';
 
     let nameInputHtml = `
-        <div class="form-group" style="margin-bottom: 1rem;">
+        <div class="form-group" style="margin-bottom: 0.5rem;">
             <input type="text" 
                    id="login-name-input" 
                    class="form-input" 
                    placeholder="..."
-                   data-i18n-placeholder="auth_name_placeholder">
+                   data-i18n-placeholder="auth_name_placeholder"
+                   value="${AppState.userName}">
             <div id="login-name-error" class="error-text" data-i18n="auth_name_error">Please enter your full name.</div>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem; text-align: left;">
+            <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;" data-i18n="auth_gender_label">Gender (Optional)</div>
+            <div class="gender-selector">
+                <div class="gender-btn ${AppState.userGender === 'male' ? 'active' : ''}" data-gender="male" data-i18n="gender_male">Male</div>
+                <div class="gender-btn ${AppState.userGender === 'female' ? 'active' : ''}" data-gender="female" data-i18n="gender_female">Female</div>
+                <div class="gender-btn ${AppState.userGender === 'prefer_not_to_say' ? 'active' : ''}" data-gender="prefer_not_to_say" data-i18n="gender_prefer_not_to_say">Prefer not to say</div>
+            </div>
         </div>
     `;
 
@@ -343,6 +416,7 @@ function attachScreenListeners(screenName) {
 
         const nameInput = document.getElementById('login-name-input');
         const nameErrorText = document.getElementById('login-name-error');
+        const genderBtns = document.querySelectorAll('.gender-btn');
 
         // Translate placeholders dynamically
         const placeholderKey = input.getAttribute('data-i18n-placeholder');
@@ -359,10 +433,21 @@ function attachScreenListeners(screenName) {
 
         tabs.forEach(tab => {
             tab.addEventListener('click', (e) => {
+                if (nameInput) AppState.userName = nameInput.value; // Store transient name
                 AppState.authMethod = e.target.dataset.method;
                 AppState.authValue = input.value; // Store transient value
                 AppState.authError = false; // Reset error state on tab switch
                 renderScreen('login'); // Re-render to swap input types/active classes
+            });
+        });
+
+        genderBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const selectedGender = e.target.dataset.gender;
+                AppState.userGender = selectedGender;
+
+                genderBtns.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
             });
         });
 
@@ -409,40 +494,12 @@ function attachScreenListeners(screenName) {
                 }
 
                 if (AppState.authMethod === 'mobile') {
-                    // Update UI state
-                    sendBtn.disabled = true;
-                    document.getElementById('btn-send-text').innerText = "Sending...";
-
-                    // Format phone to international standard (assuming India +91 for now)
-                    const phoneNumber = "+91" + AppState.authValue;
-                    const appVerifier = window.recaptchaVerifier;
-
-                    firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier)
-                        .then((confirmationResult) => {
-                            // SMS sent. Prompt user to type the code from the message, then sign in.
-                            window.confirmationResult = confirmationResult;
-                            console.log("OTP Sent Successfully!");
-                            renderScreen('otp');
-                        }).catch((error) => {
-                            // Error; SMS not sent
-                            console.error("OTP Failed to Send:", error);
-                            sendBtn.disabled = false;
-                            document.getElementById('btn-send-text').setAttribute('data-i18n', 'login_btn');
-                            updateTranslations();
-
-                            AppState.authError = true;
-                            errorText.innerText = "Error sending OTP. Too many requests or invalid number.";
-                            errorText.classList.add('show');
-
-                            // Reset recaptcha so user can try again
-                            if (window.recaptchaVerifier) window.recaptchaVerifier.render().then(widgetId => grecaptcha.reset(widgetId));
-                        });
-
-                } else {
-                    // Email flow - Not fully wired to Firebase yet since Firebase Email links are complex.
-                    // Proceeding to mock OTP logic for email for now.
-                    renderScreen('otp');
+                    // Firebase requires a credit card on file to send real SMS (Google Cloud "Blaze Plan").
+                    // Since the text cannot be sent without it, we are simulating the text message here so you can continue testing.
+                    console.log("Mocking OTP for mobile due to Firebase Billing Restriction.");
                 }
+
+                renderScreen('otp');
 
             } else if (!isMethodValid) {
                 AppState.authError = true; // flag error on state before rendering
@@ -468,53 +525,20 @@ function attachScreenListeners(screenName) {
         verifyBtn.addEventListener('click', () => {
             const val = input.value.trim();
 
-            if (AppState.authMethod === 'mobile' && window.confirmationResult) {
-                // Update UI state
-                verifyBtn.disabled = true;
-                verifyBtn.innerText = "Verifying...";
-
-                // Verify with Firebase
-                window.confirmationResult.confirm(val).then((result) => {
-                    // User signed in successfully.
-                    const user = result.user;
-                    AppState.isAuthenticated = true;
-                    errorText.classList.remove('show');
-                    renderScreen('welcome');
-
-                }).catch((error) => {
-                    // User couldn't sign in (bad verification code?)
-                    console.error("OTP Verification Failed", error);
-                    errorText.innerText = "Invalid OTP. Please try again.";
-                    errorText.classList.add('show');
-                    input.value = ''; // clear on fail
-                    input.focus();
-
-                    // Reset UI
-                    verifyBtn.disabled = false;
-                    verifyBtn.innerHTML = '<span data-i18n="otp_btn">Verify & Login</span>';
-                    updateTranslations();
-                });
-
+            // Mock verify with code 1234
+            if (val === '1234') {
+                AppState.isAuthenticated = true;
+                errorText.classList.remove('show');
+                renderScreen('welcome');
             } else {
-                // Mock logic fallback for Email
-                if (val === '1234') {
-                    AppState.isAuthenticated = true;
-                    errorText.classList.remove('show');
-                    renderScreen('welcome');
-                } else {
-                    errorText.classList.add('show');
-                    input.value = ''; // clear on fail
-                    input.focus();
-                }
+                errorText.classList.add('show');
+                input.value = ''; // clear on fail
+                input.focus();
             }
         });
 
         resendBtn.addEventListener('click', () => {
-            if (AppState.authMethod === 'mobile') {
-                alert('Please go back to request a new OTP for security reasons.');
-            } else {
-                alert('A new OTP has been sent! (Use 1234)');
-            }
+            alert('A new simulated OTP has been sent! (Use 1234)');
         });
     }
 
