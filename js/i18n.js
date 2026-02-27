@@ -1,0 +1,188 @@
+// i18n.js - Localization Engine
+
+const Translations = {
+    en: {
+        app_title: "Student Guidance App",
+        logo_text: "Guidance",
+        footer_text: "Designed to help you choose the best career path after 10th & PUC.",
+        welcome_title: "Discover Your True Path",
+        welcome_subtitle: "We guide you to the correct courses and government exams based on your unique interests and abilities. No confusion, just clarity.",
+        welcome_user: "Welcome {name}",
+        greeting_morning: "Good morning",
+        greeting_afternoon: "Good afternoon",
+        greeting_evening: "Good evening",
+        btn_get_started: "Get Started",
+        level_select_title: "What is your current education level?",
+        level_select_sub: "Select the stage you are currently studying or have just completed.",
+        level_10th: "Class 10th",
+        level_science: "PUC (Science)",
+        level_commerce: "PUC (Commerce)",
+        level_arts: "PUC (Arts)",
+        btn_back: "Back",
+        btn_continue: "Continue",
+        btn_restart: "Start Over",
+        calc_title: "Analyzing your profile...",
+        calc_sub: "Finding the perfect matches for courses and government exams.",
+        results_title: "Your Personalized Recommendations",
+        results_sub: "Based on your answers, these options suit you best.",
+        tab_courses: "Courses",
+        tab_exams: "Govt Exams",
+        why_suits: "Why this suits you:",
+        view_details: "View Details & Roadmap",
+        close: "Close",
+        login_title: "Welcome Student",
+        login_sub: "Please enter your email or mobile number to continue.",
+        auth_signin_title: "Welcome Back",
+        auth_signup_title: "Create Account",
+        auth_signin_sub: "Sign in to continue your journey.",
+        auth_signup_sub: "Join us to discover your true path.",
+        auth_name_placeholder: "Enter full name",
+        auth_name_error: "Please enter your full name.",
+        auth_switch_to_signup: "Don't have an account? Sign Up",
+        auth_switch_to_signin: "Already have an account? Sign In",
+        login_tab_email: "Email",
+        login_tab_mobile: "Mobile Number",
+        login_input_email: "Enter your email address",
+        login_input_mobile: "Enter your mobile number",
+        login_btn: "Send OTP",
+        otp_title: "Verify Secure OTP",
+        otp_sub: "Please enter the 4-digit verification code sent to you.",
+        otp_input: "Enter 4-digit code",
+        otp_btn: "Verify & Login",
+        otp_resend: "Didn't receive the code? Resend",
+        login_error_email: "Please enter a valid email address.",
+        login_error_mobile: "Please enter a valid 10-digit mobile number.",
+        otp_error_invalid: "Invalid OTP. Please try '1234'."
+    },
+    hi: {
+        app_title: "छात्र मार्गदर्शन ऐप",
+        logo_text: "मार्गदर्शन",
+        footer_text: "10वीं और पीयूसी के बाद सर्वश्रेष्ठ करियर पथ चुनने में आपकी मदद करने के लिए डिज़ाइन किया गया।",
+        welcome_title: "अपना सही रास्ता खोजें",
+        welcome_subtitle: "हम आपकी अद्वितीय रुचियों और क्षमताओं के आधार पर आपको सही पाठ्यक्रम और सरकारी परीक्षाओं के लिए मार्गदर्शन करते हैं। कोई भ्रम नहीं, केवल स्पष्टता।",
+        welcome_user: "{name} का स्वागत है",
+        greeting_morning: "शुभ प्रभात",
+        greeting_afternoon: "शुभ दोपहर",
+        greeting_evening: "शुभ संध्या",
+        btn_get_started: "शुरू करें",
+        level_select_title: "आपका वर्तमान शिक्षा स्तर क्या है?",
+        level_select_sub: "उस चरण का चयन करें जिसका आप वर्तमान में अध्ययन कर रहे हैं या हाल ही में पूरा किया है।",
+        level_10th: "कक्षा 10वीं",
+        level_science: "पीयूसी (विज्ञान)",
+        level_commerce: "पीयूसी (वाणिज्य)",
+        level_arts: "पीयूसी (कला)",
+        btn_back: "पीछे",
+        btn_continue: "आगे बढ़ें",
+        btn_restart: "फिर से शुरू करें",
+        calc_title: "आपकी प्रोफ़ाइल का विश्लेषण कर रहे हैं...",
+        calc_sub: "पाठ्यक्रमों और सरकारी परीक्षाओं के लिए सही मिलान खोजना।",
+        results_title: "आपकी व्यक्तिगत सिफारिशें",
+        results_sub: "आपके उत्तरों के आधार पर, ये विकल्प आपके लिए सबसे उपयुक्त हैं।",
+        tab_courses: "पाठ्यक्रम",
+        tab_exams: "सरकारी परीक्षा",
+        why_suits: "यह आपके लिए क्यों उपयुक्त है:",
+        view_details: "विवरण और रोडमैप देखें",
+        close: "बंद करें",
+        login_title: "स्वागत है छात्र",
+        login_sub: "कृपया जारी रखने के लिए अपना ईमेल या मोबाइल नंबर दर्ज करें।",
+        auth_signin_title: "वापसी पर स्वागत है",
+        auth_signup_title: "खाता बनाएं",
+        auth_signin_sub: "अपनी यात्रा जारी रखने के लिए साइन इन करें।",
+        auth_signup_sub: "अपना सही रास्ता खोजने के लिए हमसे जुड़ें।",
+        auth_name_placeholder: "पूरा नाम दर्ज करें",
+        auth_name_error: "कृपया अपना पूरा नाम दर्ज करें।",
+        auth_switch_to_signup: "क्या आपका खाता नहीं है? साइन अप करें",
+        auth_switch_to_signin: "क्या आपके पास पहले से खाता है? साइन इन करें",
+        login_tab_email: "ईमेल",
+        login_tab_mobile: "मोबाइल नंबर",
+        login_input_email: "अपना ईमेल पता दर्ज करें",
+        login_input_mobile: "अपना मोबाइल नंबर दर्ज करें",
+        login_btn: "OTP भेजें",
+        otp_title: "सुरक्षित OTP सत्यापित करें",
+        otp_sub: "कृपया आपको भेजा गया 4 अंकों का सत्यापन कोड दर्ज करें।",
+        otp_input: "4 अंकों का कोड दर्ज करें",
+        otp_btn: "सत्यापित करें और लॉगिन करें",
+        otp_resend: "कोड नहीं मिला? फिर से भेजें",
+        login_error_email: "कृपया एक वैध ईमेल पता दर्ज करें।",
+        login_error_mobile: "कृपया एक वैध 10-अंकीय मोबाइल नंबर दर्ज करें।",
+        otp_error_invalid: "अमान्य OTP। कृपया '1234' का प्रयास करें।"
+    },
+    kn: {
+        app_title: "ವಿದ್ಯಾರ್ಥಿ ಮಾರ್ಗದರ್ಶನ ಅಪ್ಲಿಕೇಶನ್",
+        logo_text: "ಮಾರ್ಗದರ್ಶನ",
+        footer_text: "10 ನೇ ತರಗತಿ ಮತ್ತು ಪಿಯುಸಿ ನಂತರ ಉತ್ತಮ ವೃತ್ತಿ ಮಾರ್ಗವನ್ನು ಆಯ್ಕೆ ಮಾಡಲು ನಿಮಗೆ ಸಹಾಯ ಮಾಡಲು ವಿನ್ಯಾಸಗೊಳಿಸಲಾಗಿದೆ.",
+        welcome_title: "ನಿಮ್ಮ ನಿಜವಾದ ಮಾರ್ಗವನ್ನು ಅನ್ವೇಷಿಸಿ",
+        welcome_subtitle: "ನಿಮ್ಮ ಅನನ್ಯ ಆಸಕ್ತಿಗಳು ಮತ್ತು ಸಾಮರ್ಥ್ಯಗಳ ಆಧಾರದ ಮೇಲೆ ನಾವು ನಿಮಗೆ ಸರಿಯಾದ ಕೋರ್ಸ್‌ಗಳು ಮತ್ತು ಸರ್ಕಾರಿ ಪರೀಕ್ಷೆಗಳಿಗೆ ಮಾರ್ಗದರ್ಶನ ನೀಡುತ್ತೇವೆ.",
+        welcome_user: "ಸ್ವಾಗತ {name}",
+        greeting_morning: "ಶುಭೋದಯ",
+        greeting_afternoon: "ಶುಭ ಮಧ್ಯಾಹ್ನ",
+        greeting_evening: "ಶುಭ ಸಂಜೆ",
+        btn_get_started: "ಪ್ರಾರಂಭಿಸಿ",
+        level_select_title: "ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಶಿಕ್ಷಣ ಮಟ್ಟ ಏನು?",
+        level_select_sub: "ನೀವು ಪ್ರಸ್ತುತ ಓದುತ್ತಿರುವ ಅಥವಾ ಈಗಷ್ಟೇ ಪೂರ್ಣಗೊಳಿಸಿದ ಹಂತವನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+        level_10th: "10ನೇ ತರಗತಿ",
+        level_science: "ಪಿಯುಸಿ (ವಿಜ್ಞಾನ)",
+        level_commerce: "ಪಿಯುಸಿ (ವಾಣಿಜ್ಯ)",
+        level_arts: "ಪಿಯುಸಿ (ಕಲೆ)",
+        btn_back: "ಹಿಂದೆ",
+        btn_continue: "ಮುಂದುವರಿಸಿ",
+        btn_restart: "ಮತ್ತೆ ಪ್ರಾರಂಭಿಸಿ",
+        calc_title: "ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...",
+        calc_sub: "ಕೋರ್ಸ್‌ಗಳು ಮತ್ತು ನಿರ್ದಿಷ್ಟ ಪರೀಕ್ಷೆಗಳಿಗೆ ಸೂಕ್ತವಾದ ಹೊಂದಾಣಿಕೆಗಳನ್ನು ಹುಡುಕಲಾಗುತ್ತಿದೆ.",
+        results_title: "ನಿಮ್ಮ ವೈಯಕ್ತೀಕರಿಸಿದ ಶಿಫಾರಸುಗಳು",
+        results_sub: "ನಿಮ್ಮ ಉತ್ತರಗಳ ಆಧಾರದ ಮೇಲೆ, ಈ ಆಯ್ಕೆಗಳು ನಿಮಗೆ ಸೂಕ್ತವಾಗಿವೆ.",
+        tab_courses: "ಕೋರ್ಸ್‌ಗಳು",
+        tab_exams: "ಸರ್ಕಾರಿ ಪರೀಕ್ಷೆಗಳು",
+        why_suits: "ಇದು ನಿಮಗೆ ಏಕೆ ಸೂಕ್ತವಾಗಿದೆ:",
+        view_details: "ವಿವರಗಳು ಮತ್ತು ಮಾರ್ಗಸೂಚಿಯನ್ನು ವೀಕ್ಷಿಸಿ",
+        close: "ಮುಚ್ಚಿ",
+        login_title: "ಸ್ವಾಗತ ವಿದ್ಯಾರ್ಥಿ",
+        login_sub: "ಮುಂದುವರೆಯಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್ ಅಥವಾ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ.",
+        auth_signin_title: "ಮರಳಿ ಸ್ವಾಗತ",
+        auth_signup_title: "ಖಾತೆ ರಚಿಸಿ",
+        auth_signin_sub: "ನಿಮ್ಮ ಪ್ರಯಾಣವನ್ನು ಮುಂದುವರಿಸಲು ಸೈನ್ ಇನ್ ಮಾಡಿ.",
+        auth_signup_sub: "ನಿಮ್ಮ ನಿಜವಾದ ಮಾರ್ಗವನ್ನು ಅನ್ವೇಷಿಸಲು ನಮ್ಮೊಂದಿಗೆ ಸೇರಿ.",
+        auth_name_placeholder: "ಪೂರ್ಣ ಹೆಸರನ್ನು ನಮೂದಿಸಿ",
+        auth_name_error: "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಪೂರ್ಣ ಹೆಸರನ್ನು ನಮೂದಿಸಿ.",
+        auth_switch_to_signup: "ಖಾತೆ ಇಲ್ಲವೇ? ಸೈನ್ ಅಪ್ ಮಾಡಿ",
+        auth_switch_to_signin: "ಈಗಾಗಲೇ ಖಾತೆ ಹೊಂದಿದ್ದೀರಾ? ಸೈನ್ ಇನ್ ಮಾಡಿ",
+        login_tab_email: "ಇಮೇಲ್",
+        login_tab_mobile: "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ",
+        login_input_email: "ನಿಮ್ಮ ಇಮೇಲ್ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ",
+        login_input_mobile: "ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ",
+        login_btn: "OTP ಕಳುಹಿಸಿ",
+        otp_title: "ಸುರಕ್ಷಿತ OTP ಪರಿಶೀಲಿಸಿ",
+        otp_sub: "ದಯವಿಟ್ಟು ನಿಮಗೆ ಕಳುಹಿಸಲಾದ 4 ಅಂಕಿಯ ಪರಿಶೀಲನಾ ಕೋಡ್ ಅನ್ನು ನಮೂದಿಸಿ.",
+        otp_input: "4-ಅಂಕಿಯ ಕೋಡ್ ನಮೂದಿಸಿ",
+        otp_btn: "ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಲಾಗಿನ್ ಮಾಡಿ",
+        otp_resend: "ಕೋಡ್ ಸ್ವೀಕರಿಸಿಲ್ಲವೇ? ಮರುಕಳುಹಿಸಿ",
+        login_error_email: "ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ಇಮೇಲ್ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ.",
+        login_error_mobile: "ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ 10-ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ.",
+        otp_error_invalid: "ಅಮಾನ್ಯ OTP. ದಯವಿಟ್ಟು '1234' ಪ್ರಯತ್ನಿಸಿ."
+    }
+};
+
+function updateTranslations() {
+    const lang = AppState.language; // Accessed from global state
+
+    // Select all elements that have a data-i18n attribute
+    const elements = document.querySelectorAll('[data-i18n]');
+
+    elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+
+        // Check if translation exists for current language and key
+        if (Translations[lang] && Translations[lang][key]) {
+            // Apply translation, checking if we need to preserve HTML inside (like the logo span)
+            if (key === 'logo_text') {
+                el.innerHTML = Translations[lang][key] + '<span class="highlight">Pro</span>';
+            } else if (key === 'welcome_user') {
+                const appStateName = typeof AppState !== 'undefined' ? AppState.userName : null;
+                const name = appStateName ? appStateName : 'Student';
+                el.innerText = Translations[lang][key].replace('{name}', name);
+            } else {
+                el.innerText = Translations[lang][key];
+            }
+        }
+    });
+}

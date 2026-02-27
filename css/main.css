@@ -1,0 +1,265 @@
+/* CSS Variables - Design System (Glassmorphic & Modern) */
+:root {
+    /* Colors */
+    --primary-color: #4f46e5;
+    --primary-light: #6366f1;
+    --primary-dark: #4338ca;
+    --secondary-color: #ec4899;
+    --background-start: #f3f4f6;
+    --background-end: #e5e7eb;
+    --surface-light: rgba(255, 255, 255, 0.7);
+    --surface-solid: #ffffff;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --text-light: #f9fafb;
+    --border-color: rgba(255, 255, 255, 0.5);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-glow: 0 0 15px rgba(79, 70, 229, 0.4);
+
+    /* Typography */
+    --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-size-bs: 16px;
+
+    /* Spacing & Radii */
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-full: 9999px;
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+}
+
+/* Dark Mode Theme Support mapping */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-start: #111827;
+        --background-end: #1f2937;
+        --surface-light: rgba(31, 41, 55, 0.7);
+        --surface-solid: #1f2937;
+        --text-main: #f9fafb;
+        --text-muted: #9ca3af;
+        --border-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* Explicit Dark Mode Override */
+[data-theme="dark"] {
+    --background-start: #111827;
+    --background-end: #1f2937;
+    --surface-light: rgba(31, 41, 55, 0.7);
+    --surface-solid: #1f2937;
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+    --border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Explicit Light Mode Override */
+[data-theme="light"] {
+    --primary-color: #4f46e5;
+    --primary-light: #6366f1;
+    --primary-dark: #4338ca;
+    --secondary-color: #ec4899;
+    --background-start: #f3f4f6;
+    --background-end: #e5e7eb;
+    --surface-light: rgba(255, 255, 255, 0.7);
+    --surface-solid: #ffffff;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --text-light: #f9fafb;
+    --border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Reset & Base HTML Styles */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-bs);
+    color: var(--text-main);
+    background: linear-gradient(135deg, var(--background-start), var(--background-end));
+    background-attachment: fixed;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* App Layout */
+.app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Header */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+    animation: fadeInDown 0.5s ease;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.05em;
+}
+
+.logo .highlight {
+    color: var(--primary-color);
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.lang-selector {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-color);
+    background: var(--surface-light);
+    color: var(--text-main);
+    font-family: var(--font-family);
+    font-size: 0.875rem;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: var(--transition-fast);
+}
+
+.lang-selector:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.theme-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition-fast);
+}
+
+.theme-toggle-btn:hover {
+    background: var(--surface-light);
+    color: var(--primary-color);
+}
+
+/* Content Area */
+.content-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: 1rem 0;
+}
+
+/* Footer */
+.app-footer {
+    text-align: center;
+    padding: 2rem 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+/* Utility Animations & Loaders */
+.screen-loader {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    z-index: 50;
+    transition: opacity 0.3s ease;
+}
+
+.screen-loader.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(79, 70, 229, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Screen transition classes */
+.screen-fade-enter {
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.screen-slide-up {
+    animation: slideUp 0.5s ease forwards;
+}
+
+/* Hidden Utility */
+.hidden {
+    display: none !important;
+}
