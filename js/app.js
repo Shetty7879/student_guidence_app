@@ -186,8 +186,11 @@ function renderLoginScreen() {
                 </div>
             </div>
 
+            <!-- Firebase invisible reCAPTCHA wrapper -->
+            <div id="recaptcha-wrapper"></div>
+            
             <button id="btn-send-otp" class="btn btn-primary" style="width: 100%; font-size: 1.125rem;">
-                <span data-i18n="login_btn">Send OTP</span>
+                <span id="btn-send-text" data-i18n="login_btn">Send OTP</span>
             </button>
             
             <button id="btn-switch-auth" class="btn btn-secondary" data-target="${nextAuthType}" style="width: 100%; padding: 0.5rem; font-size: 0.875rem; border: none; background: transparent; color: var(--text-muted); margin-top: 1rem;">
@@ -368,6 +371,11 @@ function attachScreenListeners(screenName) {
             renderScreen('login');
         });
 
+        // Initialize Firebase Recaptcha on load of this screen
+        if (typeof setupRecaptcha === 'function') {
+            setupRecaptcha();
+        }
+
         sendBtn.addEventListener('click', () => {
             const val = input.value.trim();
             let isMethodValid = false;
@@ -392,13 +400,50 @@ function attachScreenListeners(screenName) {
 
             if (isMethodValid && isNameValid) {
                 AppState.authValue = val;
-                AppState.authError = false; // clear error 
+                AppState.authError = false;
+                nameErrorText?.classList.remove('show');
+                errorText.classList.remove('show');
 
                 if (nameInput) {
                     AppState.userName = nameInput.value.trim();
                 }
 
-                renderScreen('otp');
+                if (AppState.authMethod === 'mobile') {
+                    // Update UI state
+                    sendBtn.disabled = true;
+                    document.getElementById('btn-send-text').innerText = "Sending...";
+
+                    // Format phone to international standard (assuming India +91 for now)
+                    const phoneNumber = "+91" + AppState.authValue;
+                    const appVerifier = window.recaptchaVerifier;
+
+                    firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier)
+                        .then((confirmationResult) => {
+                            // SMS sent. Prompt user to type the code from the message, then sign in.
+                            window.confirmationResult = confirmationResult;
+                            console.log("OTP Sent Successfully!");
+                            renderScreen('otp');
+                        }).catch((error) => {
+                            // Error; SMS not sent
+                            console.error("OTP Failed to Send:", error);
+                            sendBtn.disabled = false;
+                            document.getElementById('btn-send-text').setAttribute('data-i18n', 'login_btn');
+                            updateTranslations();
+
+                            AppState.authError = true;
+                            errorText.innerText = "Error sending OTP. Too many requests or invalid number.";
+                            errorText.classList.add('show');
+
+                            // Reset recaptcha so user can try again
+                            if (window.recaptchaVerifier) window.recaptchaVerifier.render().then(widgetId => grecaptcha.reset(widgetId));
+                        });
+
+                } else {
+                    // Email flow - Not fully wired to Firebase yet since Firebase Email links are complex.
+                    // Proceeding to mock OTP logic for email for now.
+                    renderScreen('otp');
+                }
+
             } else if (!isMethodValid) {
                 AppState.authError = true; // flag error on state before rendering
 
@@ -422,20 +467,54 @@ function attachScreenListeners(screenName) {
 
         verifyBtn.addEventListener('click', () => {
             const val = input.value.trim();
-            // Mock verify with code 1234
-            if (val === '1234') {
-                AppState.isAuthenticated = true;
-                errorText.classList.remove('show');
-                renderScreen('welcome');
+
+            if (AppState.authMethod === 'mobile' && window.confirmationResult) {
+                // Update UI state
+                verifyBtn.disabled = true;
+                verifyBtn.innerText = "Verifying...";
+
+                // Verify with Firebase
+                window.confirmationResult.confirm(val).then((result) => {
+                    // User signed in successfully.
+                    const user = result.user;
+                    AppState.isAuthenticated = true;
+                    errorText.classList.remove('show');
+                    renderScreen('welcome');
+
+                }).catch((error) => {
+                    // User couldn't sign in (bad verification code?)
+                    console.error("OTP Verification Failed", error);
+                    errorText.innerText = "Invalid OTP. Please try again.";
+                    errorText.classList.add('show');
+                    input.value = ''; // clear on fail
+                    input.focus();
+
+                    // Reset UI
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = '<span data-i18n="otp_btn">Verify & Login</span>';
+                    updateTranslations();
+                });
+
             } else {
-                errorText.classList.add('show');
-                input.value = ''; // clear on fail
-                input.focus();
+                // Mock logic fallback for Email
+                if (val === '1234') {
+                    AppState.isAuthenticated = true;
+                    errorText.classList.remove('show');
+                    renderScreen('welcome');
+                } else {
+                    errorText.classList.add('show');
+                    input.value = ''; // clear on fail
+                    input.focus();
+                }
             }
         });
 
         resendBtn.addEventListener('click', () => {
-            alert('A new OTP has been sent! (Use 1234)');
+            if (AppState.authMethod === 'mobile') {
+                alert('Please go back to request a new OTP for security reasons.');
+            } else {
+                alert('A new OTP has been sent! (Use 1234)');
+            }
         });
     }
 
