@@ -52,6 +52,35 @@
                     <option value="hi">हिंदी</option>
                     <option value="kn">ಕನ್ನಡ</option>
                 </select>
+                <div id="notification-wrapper" class="notification-wrapper hidden"
+                    style="position: relative; margin-right: 0.5rem;">
+                    <button id="notification-btn" class="profile-btn" aria-label="Notifications"
+                        style="position: relative;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span id="notification-badge" class="badge hidden"
+                            style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 12px; padding: 2px 6px; font-size: 0.7rem; font-weight: bold; border: 2px solid var(--bg-primary);">0</span>
+                    </button>
+                    <div id="notification-dropdown" class="profile-dropdown glass-card hidden"
+                        style="width: 320px; right: -50px; padding: 0;">
+                        <div class="dropdown-header"
+                            style="padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary); border-radius: 12px 12px 0 0; margin: 0;">
+                            <span data-i18n="notifications_title"
+                                style="font-weight: 600; color: var(--text-main);">Notifications</span>
+                            <span id="notification-mark-read"
+                                style="font-size: 0.75rem; color: var(--primary-color); cursor: pointer;"
+                                data-i18n="mark_all_read">Mark all read</span>
+                        </div>
+                        <div id="notification-list" style="max-height: 350px; overflow-y: auto; padding: 0;">
+                            <!-- Notifications injected here -->
+                            <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.875rem;"
+                                data-i18n="no_notifications">No new notifications</div>
+                        </div>
+                    </div>
+                </div>
                 <div id="profile-menu-wrapper" class="profile-menu-wrapper hidden">
                     <button id="profile-btn" class="profile-btn" aria-label="Profile Menu">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -72,8 +101,14 @@
                             <div class="dropdown-item" id="menu-theme-toggle">
                                 <span data-i18n="prof_item_theme">Toggle Theme</span>
                             </div>
-                            <div class="dropdown-item" id="menu-notifications">
-                                <span data-i18n="prof_item_notifications">Notifications</span>
+                            <div class="dropdown-item" id="menu-notifications-toggle">
+                                <span id="text-notif-toggle" data-i18n="prof_item_notifications_disable">Disable
+                                    Notifications</span>
+                            </div>
+                            <!-- Admin Panel Access -->
+                            <div class="dropdown-item" id="menu-admin-panel"
+                                style="border-top: 1px solid var(--border-color); color: var(--primary-color);">
+                                <span data-i18n="prof_item_admin">Admin Panel</span>
                             </div>
                         </div>
                         <div class="dropdown-section">
@@ -86,6 +121,9 @@
                             </div>
                             <div class="dropdown-item" id="menu-saved">
                                 <span data-i18n="prof_item_saved">Saved Courses & Exams</span>
+                            </div>
+                            <div class="dropdown-item" id="menu-exam-updates">
+                                <span data-i18n="prof_item_exam_updates">Government Exam Updates</span>
                             </div>
                         </div>
                         <div class="dropdown-section">
@@ -136,7 +174,9 @@
     <!-- JS Scripts -->
     <script src="js/i18n.js?v=3"></script>
     <script src="js/data.js?v=3"></script>
+    <script src="js/store.js?v=3"></script>
     <script src="js/engine.js?v=3"></script>
+    <script src="js/notifications.js?v=3"></script>
     <script src="js/firebase-client.js?v=3"></script>
     <script src="js/app.js?v=3"></script>
     <!-- Service Worker Registration (Disabled for Dev)

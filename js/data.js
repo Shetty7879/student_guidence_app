@@ -4,127 +4,241 @@ const AppData = {
     // Profiling Dimensions:
     // math_sci, commerce, arts, govt, private, physical, practical, theory
 
-    // Question Bank
-    questions: [
-        {
-            id: 'q1',
-            text: {
-                en: "Which type of subjects do you naturally enjoy studying the most?",
-                hi: "आपको स्वाभाविक रूप से किस प्रकार के विषय पढ़ना सबसे ज्यादा पसंद है?",
-                kn: "ನೀವು ಸ್ವಾಭಾವಿಕವಾಗಿ ಯಾವ ರೀತಿಯ ವಿಷಯಗಳನ್ನು ಅಧ್ಯಯನ ಮಾಡಲು ಹೆಚ್ಚು ಇಷ್ಟಪಡುತ್ತೀರಿ?"
-            },
-            options: [
+    // Question Bank (Dynamic by Stream & Interest)
+    questionSets: {
+        after_10th: {
+            courses: [
                 {
-                    ans: { en: "PCMC (Physics, Chemistry, Maths, Computer Science)", hi: "PCMC (भौतिकी, रसायन विज्ञान, गणित, कंप्यूटर विज्ञान)", kn: "PCMC (ಭೌತಶಾಸ್ತ್ರ, ರಸಾಯನಶಾಸ್ತ್ರ, ಗಣಿತ, ಕಂಪ್ಯೂಟರ್ ವಿಜ್ಞಾನ)" },
-                    weights: { math_sci: 3, practical: 1 }
+                    id: 'after_10th_c_q1',
+                    text: {
+                        en: "Which type of subjects do you naturally enjoy studying the most?",
+                        hi: "आपको स्वाभाविक रूप से किस प्रकार के विषय पढ़ना सबसे ज्यादा पसंद है?",
+                        kn: "ನೀವು ಸ್ವಾಭಾವಿಕವಾಗಿ ಯಾವ ರೀತಿಯ ವಿಷಯಗಳನ್ನು ಅಧ್ಯಯನ ಮಾಡಲು ಹೆಚ್ಚು ಇಷ್ಟಪಡುತ್ತೀರಿ?"
+                    },
+                    options: [
+                        { ans: { en: "Maths & Science (Physics, Chemistry, Biology)", hi: "गणित और विज्ञान", kn: "ಗಣಿತ ಮತ್ತು ವಿಜ್ಞಾನ" }, weights: { math_sci: 3, theory: 1 } },
+                        { ans: { en: "Social Studies, History, Languages", hi: "सामाजिक अध्ययन, इतिहास, भाषाएं", kn: "ಸಮಾಜ ಅಧ್ಯಯನ, ಇತಿಹಾಸ, ಭಾಷೆಗಳು" }, weights: { arts: 3, theory: 2 } },
+                        { ans: { en: "Computers, Coding, Technology", hi: "कंप्यूटर, कोडिंग, प्रौद्योगिकी", kn: "ಕಂಪ್ಯೂಟರ್, ಕೋಡಿಂಗ್, ತಂತ್ರಜ್ಞಾನ" }, weights: { math_sci: 2, practical: 2 } },
+                        { ans: { en: "Business basics, Economics, Accounts", hi: "व्यापार की मूल बातें", kn: "ವ್ಯವಹಾರದ ಮೂಲಗಳು" }, weights: { commerce: 3, theory: 1 } }
+                    ]
                 },
                 {
-                    ans: { en: "PCMB (Physics, Chemistry, Maths, Biology)", hi: "PCMB (भौतिकी, रसायन विज्ञान, गणित, जीव विज्ञान)", kn: "PCMB (ಭೌತಶಾಸ್ತ್ರ, ರಸಾಯನಶಾಸ್ತ್ರ, ಗಣಿತ, ಜೀವಶಾಸ್ತ್ರ)" },
-                    weights: { math_sci: 3, theory: 1 }
+                    id: 'after_10th_c_q2',
+                    text: {
+                        en: "How do you prefer to study and learn new things?",
+                        hi: "आप नई चीजें कैसे पढ़ना और सीखना पसंद करते हैं?",
+                        kn: "ನೀವು ಹೊಸ ವಿಷಯಗಳನ್ನು ಅಧ್ಯಯನ ಮಾಡಲು ಮತ್ತು ಕಲಿಯಲು ಹೇಗೆ ಇಷ್ಟಪಡುತ್ತೀರಿ?"
+                    },
+                    options: [
+                        { ans: { en: "I love reading books and writing detailed notes.", hi: "मुझे किताबें पढ़ना और विस्तृत नोट्स लिखना पसंद है।", kn: "ನಾನು ಪುಸ್ತಕಗಳನ್ನು ಓದುವುದು ಮತ್ತು ವಿವರವಾದ ಟಿಪ್ಪಣಿಗಳನ್ನು ಬರೆಯುವುದು ಇಷ್ಟಪಡುತ್ತೇನೆ." }, weights: { theory: 3 } },
+                        { ans: { en: "I prefer practical experiments, building models, or lab work.", hi: "मुझे व्यावहारिक प्रयोग पसंद है।", kn: "ನಾನು ಪ್ರಾಯೋಗಿಕ ಪ್ರಯೋಗಗಳನ್ನು ಬಯಸುತ್ತೇನೆ." }, weights: { practical: 3, math_sci: 1 } },
+                        { ans: { en: "I like group discussions and participating in debates.", hi: "मुझे समूह चर्चा पसंद है।", kn: "ನಾನು ಗುಂಪು ಚರ್ಚೆಗಳನ್ನು ಇಷ್ಟಪಡುತ್ತೇನೆ." }, weights: { arts: 2, theory: 1 } }
+                    ]
+                }
+            ],
+            exams: [
+                {
+                    id: 'after_10th_e_q1',
+                    text: {
+                        en: "How do you feel about your physical fitness and discipline?",
+                        hi: "आप अपनी शारीरिक फिटनेस और अनुशासन के बारे में कैसा महसूस करते हैं?",
+                        kn: "ನಿಮ್ಮ ದೈಹಿಕ ಫಿಟ್ನೆಸ್ ಮತ್ತು ಶಿಸ್ತಿನ ಬಗ್ಗೆ ನಿಮಗೆ ಹೇಗೆ ಅನಿಸುತ್ತದೆ?"
+                    },
+                    options: [
+                        { ans: { en: "Highly active, fit, and love strict discipline (Army/Police).", hi: "अत्यधिक सक्रिय, फिट, सख्त अनुशासन (सेना/पुलिस)।", kn: "ಹೆಚ್ಚು ಸಕ್ರಿಯ, ಕಟ್ಟುನಿಟ್ಟಾದ ಶಿಸ್ತು (ಸೇನೆ/ಪೊಲೀಸ್)." }, weights: { physical: 3, govt: 2 } },
+                        { ans: { en: "I prefer sitting, reading, or mental tasks (Clerk/Admin).", hi: "मुझे बैठना, पढ़ना या मानसिक कार्य करना पसंद है।", kn: "ನಾನು ಕುಳಿತುಕೊಳ್ಳಲು, ಓದಲು ಅಥವಾ ಮಾನಸಿಕ ಕಾರ್ಯಗಳನ್ನು ಮಾಡಲು ಇಷ್ಟಪಡುತ್ತೇನೆ." }, weights: { theory: 2, govt: 2 } }
+                    ]
                 },
                 {
-                    ans: { en: "Accounts, Economics, Business Studies", hi: "लेखा, अर्थशास्त्र, व्यवसाय अध्ययन", kn: "ಅಕೌಂಟ್ಸ್, ಅರ್ಥಶಾಸ್ತ್ರ, ವ್ಯವಹಾರ ಅಧ್ಯಯನ" },
-                    weights: { commerce: 3, theory: 1 }
-                },
-                {
-                    ans: { en: "History, Politics, Languages, Literature", hi: "इतिहास, राजनीति, भाषा, साहित्य", kn: "ಇತಿಹಾಸ, ರಾಜಕೀಯ, ಭಾಷೆ, ಸಾಹಿತ್ಯ" },
-                    weights: { arts: 3, theory: 2 }
-                },
-                {
-                    ans: { en: "I prefer hands-on, practical work over reading books.", hi: "मुझे किताबें पढ़ने के बजाय हाथों-हाथ, व्यावहारिक काम करना पसंद है।", kn: "ನಾನು ಪುಸ್ತಕಗಳನ್ನು ಓದುವುದಕ್ಕಿಂತ ಪ್ರಾಯೋಗಿಕ ಕೆಲಸವನ್ನು ಇಷ್ಟಪಡುತ್ತೇನೆ." },
-                    weights: { practical: 3 }
+                    id: 'after_10th_e_q2',
+                    text: {
+                        en: "Are you willing to spend 1-2 years intensely preparing for competitive exams?",
+                        hi: "क्या आप प्रतियोगी परीक्षाओं की तैयारी के लिए 1-2 साल बिताने के इच्छुक हैं?",
+                        kn: "ಸ್ಪರ್ಧಾತ್ಮಕ ಪರೀಕ್ಷೆಗಳಿಗೆ ತಯಾರಿ ನಡೆಸಲು ನೀವು 1-2 ವರ್ಷ ಕಳೆಯಲು ಸಿದ್ಧರಿದ್ದೀರಾ?"
+                    },
+                    options: [
+                        { ans: { en: "Yes, fully committed to tough preparations.", hi: "हां, कठिन तैयारी के लिए पूरी तरह प्रतिबद्ध हूं।", kn: "ಹೌದು, ಕಠಿಣ ಸಿದ್ಧತೆಗಳಿಗೆ ಸಂಪೂರ್ಣವಾಗಿ ಬದ್ಧರಾಗಿದ್ದೇವೆ." }, weights: { govt: 3, theory: 2 } },
+                        { ans: { en: "No, I want to join early with basic tests.", hi: "नहीं, मैं बुनियादी परीक्षणों के साथ जल्दी जुड़ना चाहता हूं।", kn: "ಇಲ್ಲ, ನಾನು ಮೂಲ ಪರೀಕ್ಷೆಗಳೊಂದಿಗೆ ಬೇಗನೆ ಸೇರಲು ಬಯಸುತ್ತೇನೆ." }, weights: { govt: 1, practical: 1, physical: 1 } }
+                    ]
                 }
             ]
         },
-        {
-            id: 'q2',
-            text: {
-                en: "How do you feel about your physical fitness and discipline?",
-                hi: "आप अपनी शारीरिक फिटनेस और अनुशासन के बारे में कैसा महसूस करते हैं?",
-                kn: "ನಿಮ್ಮ ದೈಹಿಕ ಫಿಟ್ನೆಸ್ ಮತ್ತು ಶಿಸ್ತಿನ ಬಗ್ಗೆ ನಿಮಗೆ ಹೇಗೆ ಅನಿಸುತ್ತದೆ?"
-            },
-            options: [
+        puc_science_pcmb: {
+            courses: [
                 {
-                    ans: { en: "I am highly active, fit, and love strict discipline.", hi: "मैं अत्यधिक सक्रिय, फिट हूं और सख्त अनुशासन पसंद करता हूं।", kn: "ನಾನು ಹೆಚ್ಚು ಸಕ್ರಿಯ, ಫಿಟ್ ಆಗಿದ್ದೇನೆ ಮತ್ತು ಕಟ್ಟುನಿಟ್ಟಾದ ಶಿಸ್ತನ್ನು ಇಷ್ಟಪಡುತ್ತೇನೆ." },
-                    weights: { physical: 3 }
+                    id: 'puc_pcmb_c_q1',
+                    text: {
+                        en: "Which subject combination do you find most interesting in PCMB?",
+                        hi: "PCMB में आपको कौन सा विषय संयोजन सबसे दिलचस्प लगता है?",
+                        kn: "PCMB ಯಲ್ಲಿ ಯಾವ ವಿಷಯ ಸಂಯೋಜನೆಯು ನಿಮಗೆ ಹೆಚ್ಚು ಆಸಕ್ತಿದಾಯಕವಾಗಿದೆ?"
+                    },
+                    options: [
+                        { ans: { en: "Biology & Chemistry (Medical/Life Sciences)", hi: "जीव विज्ञान और रसायन विज्ञान", kn: "ಜೀವಶಾಸ್ತ್ರ ಮತ್ತು ರಸಾಯನಶಾಸ್ತ್ರ" }, weights: { math_sci: 3, theory: 2 } },
+                        { ans: { en: "Physics & Maths (Engineering/Research)", hi: "भौतिकी और गणित", kn: "ಭೌತಶಾಸ್ತ್ರ ಮತ್ತು ಗಣಿತ" }, weights: { math_sci: 2, practical: 2, private: 1 } },
+                        { ans: { en: "Biology & Physics (Agri/Biotech)", hi: "जीव विज्ञान और भौतिकी", kn: "ಜೀವಶಾಸ್ತ್ರ ಮತ್ತು ಭೌತಶಾಸ್ತ್ರ" }, weights: { math_sci: 2, govt: 1, practical: 1 } }
+                    ]
                 },
                 {
-                    ans: { en: "Average fitness, I play sports occasionally.", hi: "औसत फिटनेस, मैं कभी-कभी खेल खेलता हूं।", kn: "ಸರಾಸರಿ ಫಿಟ್ನೆಸ್, ನಾನು মাঝে মাঝে ಕ್ರೀಡೆಗಳನ್ನು ಆಡುತ್ತೇನೆ." },
-                    weights: { physical: 1 }
-                },
+                    id: 'puc_pcmb_c_q2',
+                    text: {
+                        en: "Are you preparing for or willing to intensely prepare for NEET?",
+                        hi: "क्या आप NEET की तैयारी कर रहे हैं?",
+                        kn: "ನೀವು NEET ಗೆ ತಯಾರಿ ನಡೆಸುತ್ತಿದ್ದೀರಾ?"
+                    },
+                    options: [
+                        { ans: { en: "Yes, focused entirely on MBBS/Dental.", hi: "हां, पूरी तरह से एमबीबीएस पर केंद्रित।", kn: "ಹೌದು, ಎಂಬಿಬಿಎಸ್ ಮೇಲೆ ಕೇಂದ್ರೀಕೃತವಾಗಿದೆ." }, weights: { math_sci: 3, theory: 2, private: 1 } },
+                        { ans: { en: "Maybe, but open to B.Sc Agri, Pharmacy, or pure sciences.", hi: "शायद, लेकिन बी.एससी कृषि, फार्मेसी के लिए तैयार।", kn: "ಬಹುಶಃ, ಆದರೆ ಬಿ.ಎಸ್ಸಿ ಕೃಷಿ, ಫಾರ್ಮಸಿಗೆ ಮುಕ್ತವಾಗಿದೆ." }, weights: { govt: 2, theory: 1, math_sci: 1 } },
+                        { ans: { en: "No, prefer other non-medical degrees.", hi: "नहीं, अन्य गैर-चिकित्सा डिग्री पसंद करते हैं।", kn: "ಇಲ್ಲ, ಇತರ ವೈದ್ಯಕೀಯೇತರ ಪದವಿಗಳಿಗೆ ಆದ್ಯತೆ ನೀಡಿ." }, weights: { private: 1 } }
+                    ]
+                }
+            ],
+            exams: [
                 {
-                    ans: { en: "I prefer sitting, reading, or mental tasks.", hi: "मुझे बैठना, पढ़ना या मानसिक कार्य करना पसंद है।", kn: "ನಾನು ಕುಳಿತುಕೊಳ್ಳಲು, ಓದಲು ಅಥವಾ ಮಾನಸಿಕ ಕಾರ್ಯಗಳನ್ನು ಮಾಡಲು ಇಷ್ಟಪಡುತ್ತೇನೆ." },
-                    weights: { theory: 2, physical: -1 }
+                    id: 'puc_pcmb_e_q1',
+                    text: {
+                        en: "Are you interested in joining the Armed Forces Medical Services or NDA?",
+                        hi: "क्या आप सशस्त्र बल चिकित्सा सेवा या एनडीए में शामिल होने के इच्छुक हैं?",
+                        kn: "ನೀವು ಸಶಸ್ತ್ರ ಪಡೆಗಳ ವೈದ್ಯಕೀಯ ಸೇವೆಗಳು ಅಥವಾ ಎನ್‌ಡಿಎಗೆ ಸೇರಲು ಆಸಕ್ತಿ ಹೊಂದಿದ್ದೀರಾ?"
+                    },
+                    options: [
+                        { ans: { en: "Yes, I am physically fit and want to serve in Defense.", hi: "हां, मैं शारीरिक रूप से फिट हूं और रक्षा में सेवा करना चाहता हूं।", kn: "ಹೌದು, ನಾನು ದೈಹಿಕವಾಗಿ ಸದೃಢನಾಗಿದ್ದೇನೆ ಮತ್ತು ರಕ್ಷಣಾ ವಲಯದಲ್ಲಿ ಸೇವೆ ಸಲ್ಲಿಸಲು ಬಯಸುತ್ತೇನೆ." }, weights: { physical: 3, govt: 3, math_sci: 1 } },
+                        { ans: { en: "No, I prefer civilian government roles.", hi: "नहीं, मैं नागरिक सरकारी भूमिकाओं को प्राथमिकता देता हूं।", kn: "ಇಲ್ಲ, ನಾನು ನಾಗರಿಕ ಸರ್ಕಾರಿ ಪಾತ್ರಗಳಿಗೆ ಆದ್ಯತೆ ನೀಡುತ್ತೇನೆ." }, weights: { theory: 2, govt: 2 } }
+                    ]
                 }
             ]
         },
-        {
-            id: 'q3',
-            text: {
-                en: "What is your primary career goal in terms of job security vs. growth?",
-                hi: "नौकरी की सुरक्षा बनाम विकास के संदर्भ में आपका प्राथमिक करियर लक्ष्य क्या है?",
-                kn: "ಉದ್ಯೋಗ ಭದ್ರತೆ ವಿರುದ್ಧ ಬೆಳವಣಿಗೆಯ ವಿಷಯದಲ್ಲಿ ನಿಮ್ಮ ಪ್ರಾಥಮಿಕ ವೃತ್ತಿ ಗುರಿ ಏನು?"
-            },
-            options: [
+        puc_science_pcmc: {
+            courses: [
                 {
-                    ans: { en: "High job security, respect, stable pension (Govt Job)", hi: "उच्च नौकरी सुरक्षा, सम्मान, स्थिर पेंशन (सरकारी नौकरी)", kn: "ಹೆಚ್ಚಿನ ಉದ್ಯೋಗ ಭದ್ರತೆ, ಗೌರವ, ಸ್ಥಿರ ಪಿಂಚಣಿ (ಸರ್ಕಾರಿ ಉದ್ಯೋಗ)" },
-                    weights: { govt: 2, theory: 1 }
+                    id: 'puc_pcmc_c_q1',
+                    text: {
+                        en: "What area of PCMC excites you the most?",
+                        hi: "PCMC का कौन सा क्षेत्र आपको सबसे ज्यादा उत्साहित करता है?",
+                        kn: "PCMC ಯ ಯಾವ ಕ್ಷೇತ್ರವು ನಿಮ್ಮನ್ನು ಹೆಚ್ಚು ಉತ್ಸುಕಗೊಳಿಸುತ್ತದೆ?"
+                    },
+                    options: [
+                        { ans: { en: "Coding, Software, and Computer Science", hi: "कोडिंग, सॉफ्टवेयर", kn: "ಕೋಡಿಂಗ್, ಸಾಫ್ಟ್‌ವೇರ್" }, weights: { math_sci: 2, practical: 2, private: 2 } },
+                        { ans: { en: "Mathematics, Logic, and Problem Solving", hi: "गणित, तर्क", kn: "ಗಣಿತ, ತರ್ಕ" }, weights: { math_sci: 3, theory: 2 } },
+                        { ans: { en: "Physics, Electronics, and Hardware", hi: "भौतिकी, इलेक्ट्रॉनिक्स", kn: "ಭೌತಶಾಸ್ತ್ರ, ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್" }, weights: { practical: 3, math_sci: 1 } }
+                    ]
                 },
                 {
-                    ans: { en: "Fast growth, competitive salary, private sector", hi: "तेजी से विकास, प्रतिस्पर्धी वेतन, निजी क्षेत्र", kn: "ವೇಗದ ಬೆಳವಣಿಗೆ, ಸ್ಪರ್ಧಾತ್ಮಕ ವೇತನ, ಖಾಸಗಿ ವಲಯ" },
-                    weights: { private: 3 }
-                },
+                    id: 'puc_pcmc_c_q2',
+                    text: {
+                        en: "Are you targeting engineering entrance exams like JEE or CET?",
+                        hi: "क्या आप जेईई या सीईटी जैसी इंजीनियरिंग प्रवेश परीक्षाओं को लक्षित कर रहे हैं?",
+                        kn: "ನೀವು JEE ಅಥವಾ CET ಯಂತಹ ಎಂಜಿನಿಯರಿಂಗ್ ಪ್ರವೇಶ ಪರೀಕ್ಷೆಗಳನ್ನು ಗುರಿಯಾಗಿಸಿಕೊಂಡಿದ್ದೀರಾ?"
+                    },
+                    options: [
+                        { ans: { en: "Yes, focused purely on getting into top engineering colleges.", hi: "हां, इंजीनियरिंग पर केंद्रित।", kn: "ಹೌದು, ಎಂಜಿನಿಯರಿಂಗ್ ಮೇಲೆ ಕೇಂದ್ರೀಕೃತವಾಗಿದೆ." }, weights: { private: 2, math_sci: 2, theory: 1 } },
+                        { ans: { en: "I am preparing, but open to B.Sc CS, BCA.", hi: "मैं तैयारी कर रहा हूं, लेकिन बीएससी सीएस, बीसीए के लिए खुला हूं।", kn: "ನಾನು ತಯಾರಿ ನಡೆಸುತ್ತಿದ್ದೇನೆ, ಆದರೆ ಬಿ.ಎಸ್ಸಿ ಸಿಎಸ್, ಬಿಸಿಎಗೆ ಮುಕ್ತವಾಗಿದ್ದೇನೆ." }, weights: { govt: 1, practical: 2 } }
+                    ]
+                }
+            ],
+            exams: [
                 {
-                    ans: { en: "I want to start working and earning as early as possible", hi: "मैं जल्द से जल्द काम करना और कमाना शुरू करना चाहता हूं", kn: "ನಾನು ಸಾಧ್ಯವಾದಷ್ಟು ಬೇಗ ಕೆಲಸ ಮಾಡಲು ಮತ್ತು ಸಂಪಾದಿಸಲು ಪ್ರಾರಂಭಿಸಲು ಬಯಸುತ್ತೇನೆ" },
-                    weights: { practical: 2, govt: 1 } // E.g., Constable/ITI
+                    id: 'puc_pcmc_e_q1',
+                    text: {
+                        en: "Do you prefer a dynamic physical job (like Armed Forces/Police) or desk-based Govt jobs (SSC/Banking)?",
+                        hi: "क्या आप एक गतिशील शारीरिक नौकरी या डेस्क-आधारित सरकारी नौकरी पसंद करते हैं?",
+                        kn: "ಕ್ರಿಯಾತ್ಮಕ ದೈಹಿಕ ಉದ್ಯೋಗ ಅಥವಾ ಡೆಸ್ಕ್ ಆಧಾರಿತ ಸರ್ಕಾರಿ ಉದ್ಯೋಗವನ್ನು ನೀವು ಬಯಸುತ್ತೀರಾ?"
+                    },
+                    options: [
+                        { ans: { en: "Dynamic/Physical job (NDA, Armed Forces)", hi: "डायनेमिक/फिजिकल जॉब (एनडीए, सशस्त्र बल)", kn: "ಕ್ರಿಯಾತ್ಮಕ/ದೈಹಿಕ ಉದ್ಯೋಗ (ಎನ್‌ಡಿಎ, ಸಶಸ್ತ್ರ ಪಡೆಗಳು)" }, weights: { physical: 3, govt: 3 } },
+                        { ans: { en: "Desk-based Govt admin/clerical roles", hi: "डेस्क-आधारित सरकारी व्यवस्थापक/लिपिक भूमिकाएँ", kn: "ಡೆಸ್ಕ್ ಆಧಾರಿತ ಸರ್ಕಾರಿ ಆಡಳಿತ/ಕ್ಲೆರಿಕಲ್ ಪಾತ್ರಗಳು" }, weights: { theory: 2, govt: 3, commerce: 1 } }
+                    ]
                 }
             ]
         },
-        {
-            id: 'q4',
-            text: {
-                en: "Are you willing to spend 1-2 years intensely preparing for competitive exams?",
-                hi: "क्या आप प्रतियोगी परीक्षाओं की तैयारी के लिए 1-2 साल बिताने के इच्छुक हैं?",
-                kn: "ಸ್ಪರ್ಧಾತ್ಮಕ ಪರೀಕ್ಷೆಗಳಿಗೆ ತಯಾರಿ ನಡೆಸಲು ನೀವು 1-2 ವರ್ಷ ಕಳೆಯಲು ಸಿದ್ಧರಿದ್ದೀರಾ?"
-            },
-            options: [
+        puc_commerce: {
+            courses: [
                 {
-                    ans: { en: "Yes, fully committed to tough preparations.", hi: "हां, कठिन तैयारी के लिए पूरी तरह प्रतिबद्ध हूं।", kn: "ಹೌದು, ಕಠಿಣ ಸಿದ್ಧತೆಗಳಿಗೆ ಸಂಪೂರ್ಣವಾಗಿ ಬದ್ಧರಾಗಿದ್ದೇವೆ." },
-                    weights: { govt: 2, math_sci: 1, theory: 1 }
+                    id: 'puc_comm_c_q1',
+                    text: {
+                        en: "Which aspect of Commerce do you enjoy more?",
+                        hi: "आपको वाणिज्य का कौन सा पहलू अधिक पसंद है?",
+                        kn: "ವಾಣಿಜ್ಯದ ಯಾವ ಅಂಶವನ್ನು ನೀವು ಹೆಚ್ಚು ಆನಂದಿಸುತ್ತೀರಿ?"
+                    },
+                    options: [
+                        { ans: { en: "Accountancy and Number crunching", hi: "अकाउंटेंसी और नंबर क्रंचिंग", kn: "ಅಕೌಂಟೆನ್ಸಿ ಮತ್ತು ನಂಬರ್ ಕ್ರಂಚಿಂಗ್" }, weights: { commerce: 3, theory: 1 } },
+                        { ans: { en: "Business Studies, Management, and Leadership", hi: "व्यवसाय अध्ययन, प्रबंधन और नेतृत्व", kn: "ವ್ಯವಹಾರ ಅಧ್ಯಯನ, ನಿರ್ವಹಣೆ ಮತ್ತು ನಾಯಕತ್ವ" }, weights: { commerce: 2, practical: 1, private: 1 } },
+                        { ans: { en: "Economics, Finance, and Market trends", hi: "अर्थशास्त्र, वित्त और बाजार के रुझान", kn: "ಅರ್ಥಶಾಸ್ತ್ರ, ಹಣಕಾಸು ಮತ್ತು ಮಾರುಕಟ್ಟೆ ಪ್ರವೃತ್ತಿಗಳು" }, weights: { commerce: 2, theory: 2 } }
+                    ]
                 },
                 {
-                    ans: { en: "Maybe, if the job guarantees security.", hi: "शायद, अगर नौकरी सुरक्षा की गारंटी देती है।", kn: "ಬಹುಶಃ, ಉದ್ಯೋಗವು ಭದ್ರತೆಯನ್ನು ಖಾತರಿಪಡಿಸಿದರೆ." },
-                    weights: { govt: 1 }
-                },
+                    id: 'puc_comm_c_q2',
+                    text: {
+                        en: "Are you planning to prepare for Professional Exams like CA, CS, or CMA?",
+                        hi: "क्या आप सीए, सीएस या सीएमए जैसी व्यावसायिक परीक्षाओं की तैयारी करने की योजना बना रहे हैं?",
+                        kn: "ನೀವು CA, CS, ಅಥವಾ CMA ಯಂತಹ ವೃತ್ತಿಪರ ಪರೀಕ್ಷೆಗಳಿಗೆ ತಯಾರಿ ನಡೆಸಲು ಯೋಜಿಸುತ್ತಿದ್ದೀರಾ?"
+                    },
+                    options: [
+                        { ans: { en: "Yes, I am highly dedicated to clearing CA/CS.", hi: "हां, मैं सीए/सीएस पास करने के लिए अत्यधिक समर्पित हूं।", kn: "ಹೌದು, CA/CS ಅನ್ನು ತೆರವುಗೊಳಿಸಲು ನಾನು ಹೆಚ್ಚು ಸಮರ್ಪಿತನಾಗಿದ್ದೇನೆ." }, weights: { commerce: 3, theory: 2, private: 2 } },
+                        { ans: { en: "No, I prefer doing B.Com/BBA alone.", hi: "नहीं, मैं बीकॉम/बीबीए करना पसंद करता हूं।", kn: "ಇಲ್ಲ, ನಾನು ಬಿ.ಕಾಂ/ಬಿಬಿಎ ಮಾಡಲು ಬಯಸುತ್ತೇನೆ." }, weights: { private: 2, practical: 1 } }
+                    ]
+                }
+            ],
+            exams: [
                 {
-                    ans: { en: "No, I prefer direct campus placements or degree-based jobs.", hi: "नहीं, मुझे प्रत्यक्ष कैंपस प्लेसमेंट या डिग्री-आधारित नौकरियां पसंद हैं।", kn: "ಇಲ್ಲ, ನಾನು ನೇರ ಕ್ಯಾಂಪಸ್ ನಿಯೋಜನೆಗಳು ಅಥವಾ ಪದವಿ-ಆಧಾರಿತ ಉದ್ಯೋಗಗಳಿಗೆ ಆದ್ಯತೆ ನೀಡುತ್ತೇನೆ." },
-                    weights: { private: 2, govt: -2 }
+                    id: 'puc_comm_e_q1',
+                    text: {
+                        en: "Which government sector appeals to you the most?",
+                        hi: "कौन सा सरकारी क्षेत्र आपको सबसे ज्यादा आकर्षित करता है?",
+                        kn: "ಯಾವ ಸರ್ಕಾರಿ ವಲಯವು ನಿಮ್ಮನ್ನು ಹೆಚ್ಚು ಆಕರ್ಷಿಸುತ್ತದೆ?"
+                    },
+                    options: [
+                        { ans: { en: "Banking & Finance Sector (IBPS/SBI)", hi: "बैंकिंग और वित्त क्षेत्र (IBPS/SBI)", kn: "ಬ್ಯಾಂಕಿಂಗ್ ಮತ್ತು ಹಣಕಾಸು ವಲಯ (IBPS/SBI)" }, weights: { commerce: 2, govt: 3, theory: 2 } },
+                        { ans: { en: "Administrative & Clerical (SSC CHSL/CGL)", hi: "प्रशासनिक और लिपिक (SSC CHSL/CGL)", kn: "ಆಡಳಿತ ಮತ್ತು ಕ್ಲೆರಿಕಲ್ (SSC CHSL/CGL)" }, weights: { govt: 3, theory: 2 } },
+                        { ans: { en: "Police or Defense Forces", hi: "पुलिस या रक्षा बल", kn: "ಪೊಲೀಸ್ ಅಥವಾ ರಕ್ಷಣಾ ಪಡೆಗಳು" }, weights: { physical: 3, govt: 2 } }
+                    ]
                 }
             ]
         },
-        {
-            id: 'q5',
-            text: {
-                en: "How do you prefer to learn new things?",
-                hi: "आप नई चीजें कैसे सीखना पसंद करते हैं?",
-                kn: "ನೀವು ಹೊಸ ವಿಷಯಗಳನ್ನು ಹೇಗೆ ಕಲಿಯಲು ಇಷ್ಟಪಡುತ್ತೀರಿ?"
-            },
-            options: [
+        puc_arts: {
+            courses: [
                 {
-                    ans: { en: "Reading extensively, writing notes, memorizing", hi: "व्यापक रूप से पढ़ना, नोट्स लिखना, याद रखना", kn: "ವ್ಯಾಪಕವಾಗಿ ಓದುವುದು, ಟಿಪ್ಪಣಿಗಳನ್ನು ಬರೆಯುವುದು, ಕಂಠಪಾಠ ಮಾಡುವುದು" },
-                    weights: { theory: 2 }
+                    id: 'puc_arts_c_q1',
+                    text: {
+                        en: "What drove you to choose the Arts/Humanities stream?",
+                        hi: "किस चीज़ ने आपको कला/मानविकी स्ट्रीम चुनने के लिए प्रेरित किया?",
+                        kn: "ಕಲಾ/ಮಾನವಿಕ ಸ್ಟ್ರೀಮ್ ಅನ್ನು ಆಯ್ಕೆ ಮಾಡಲು ನಿಮ್ಮನ್ನು ಪ್ರೇರೇಪಿಸಿದ್ದು ಯಾವುದು?"
+                    },
+                    options: [
+                        { ans: { en: "Interests in History, Politics, Sociology.", hi: "इतिहास, राजनीति, समाजशास्त्र में रुचि।", kn: "ಇತಿಹಾಸ, ರಾಜಕೀಯ, ಸಮಾಜಶಾಸ್ತ್ರದಲ್ಲಿ ಆಸಕ್ತಿ." }, weights: { arts: 2, theory: 2 } },
+                        { ans: { en: "Passion for Languages and Literature.", hi: "भाषा और साहित्य का शौक।", kn: "ಭಾಷೆಗಳು ಮತ್ತು ಸಾಹಿತ್ಯದ ಬಗ್ಗೆ ಒಲವು." }, weights: { arts: 3, theory: 1 } },
+                        { ans: { en: "Creativity (Fine Arts, Journalism, Media).", hi: "रचनात्मकता (ललित कला, पत्रकारिता, मीडिया)।", kn: "ಸೃಜನಶೀಲತೆ (ಲಲಿತಕಲೆಗಳು, ಪತ್ರಿಕೋದ್ಯಮ, ಮಾಧ್ಯಮ)." }, weights: { arts: 2, private: 2, practical: 2 } }
+                    ]
                 },
                 {
-                    ans: { en: "Building things, fixing machines, using computers practically", hi: "चीजें बनाना, मशीनें ठीक करना, कंप्यूटर का व्यावहारिक उपयोग करना", kn: "ವಸ್ತುಗಳನ್ನು ನಿರ್ಮಿಸುವುದು, ಯಂತ್ರಗಳನ್ನು ಸರಿಪಡಿಸುವುದು, ಕಂಪ್ಯೂಟರ್‌ಗಳನ್ನು ಪ್ರಾಯೋಗಿಕವಾಗಿ ಬಳಸುವುದು" },
-                    weights: { practical: 3, math_sci: 1 }
-                },
+                    id: 'puc_arts_c_q2',
+                    text: {
+                        en: "How much reading and writing are you willing to do?",
+                        hi: "आप कितना पढ़ना और लिखना चाहते हैं?",
+                        kn: "ನೀವು ಎಷ್ಟು ಓದಲು ಮತ್ತು ಬರೆಯಲು ಸಿದ್ಧರಿದ್ದೀರಿ?"
+                    },
+                    options: [
+                        { ans: { en: "I can read extensively and write long, analytical essays.", hi: "मैं बड़े पैमाने पर पढ़ सकता हूं और लंबे निबंध लिख सकता हूं।", kn: "ನಾನು ವ್ಯಾಪಕವಾಗಿ ಓದಬಲ್ಲೆ ಮತ್ತು ದೀರ್ಘ ಪ್ರಬಂಧಗಳನ್ನು ಬರೆಯಬಲ್ಲೆ." }, weights: { theory: 3, arts: 1 } },
+                        { ans: { en: "I prefer practical expressions like debates, speech, or art.", hi: "मैं व्यावहारिक अभिव्यक्ति पसंद करता हूं।", kn: "ನಾನು ಪ್ರಾಯೋಗಿಕ ಅಭಿವ್ಯಕ್ತಿಗಳಿಗೆ ಆದ್ಯತೆ ನೀಡುತ್ತೇನೆ." }, weights: { practical: 3, arts: 1 } }
+                    ]
+                }
+            ],
+            exams: [
                 {
-                    ans: { en: "Managing people, organizing events, calculating finances", hi: "लोगों का प्रबंधन करना, आयोजनों का आयोजन करना, वित्त की गणना करना", kn: "ಜನರನ್ನು ನಿರ್ವಹಿಸುವುದು, ಈವೆಂಟ್‌ಗಳನ್ನು ಆಯೋಜಿಸುವುದು, ಹಣಕಾಸು ಲೆಕ್ಕಹಾಕುವುದು" },
-                    weights: { commerce: 2, practical: 1 }
+                    id: 'puc_arts_e_q1',
+                    text: {
+                        en: "What is your main goal for Government Service?",
+                        hi: "सरकारी सेवा के लिए आपका मुख्य लक्ष्य क्या है?",
+                        kn: "ಸರ್ಕಾರಿ ಸೇವೆಗಾಗಿ ನಿಮ್ಮ ಮುಖ್ಯ ಗುರಿ ಏನು?"
+                    },
+                    options: [
+                        { ans: { en: "Civil Services (IAS/IPS/KAS) to serve society at a high level.", hi: "समाज की सेवा के लिए सिविल सेवा (आईएएस/आईपीएस)।", kn: "ನಾಗರಿಕ ಸೇವೆಗಳು (IAS/IPS)." }, weights: { govt: 4, theory: 3, arts: 1 } },
+                        { ans: { en: "Administrative/Clerical jobs for security (SSC/FDA).", hi: "सुरक्षा के लिए प्रशासनिक/लिपिक नौकरियां (एसएससी/एफडीए)।", kn: "ಆಡಳಿತ/ಕ್ಲೆರಿಕಲ್ ಉದ್ಯೋಗಗಳು (SSC/FDA)." }, weights: { govt: 3, theory: 1 } },
+                        { ans: { en: "Police forces (State Police/Sub-Inspector).", hi: "पुलिस बल (राज्य पुलिस/उप-निरीक्षक)।", kn: "ಪೊಲೀಸ್ ಪಡೆಗಳು." }, weights: { physical: 3, govt: 3 } }
+                    ]
                 }
             ]
         }
-    ],
+    },
 
     // Database of Courses
     courses: [
@@ -438,8 +552,75 @@ const AppData = {
                 { step: { en: "1. Pass 12th Class" } },
                 { step: { en: "2. Clear Tier-1 (Computer Based Test)" } },
                 { step: { en: "3. Clear Tier-2 (Objective + Typing Test)" } },
-                { step: { en: "4. Document Verification & Posting" } }
             ]
+        },
+        {
+            id: "e_neet",
+            type: "exam",
+            category: "puc_science_pcmb",
+            title: { en: "NEET UG (Medical Entrance)", hi: "नीट यूजी (मेडिकल प्रवेश)", kn: "ನೀಟ್ ಯುಜಿ (ವೈದ್ಯಕೀಯ ಪ್ರವೇಶ)" },
+            description: { en: "National level medical entrance exam for MBBS/BDS.", hi: "एमबीबीएस/बीडीएस के लिए राष्ट्रीय स्तर की मेडिकल प्रवेश परीक्षा।", kn: "ಎಂಬಿಬಿಎಸ್/ಬಿಡಿಎಸ್ ಗಾಗಿ ರಾಷ್ಟ್ರೀಯ ಮಟ್ಟದ ವೈದ್ಯಕೀಯ ಪ್ರವೇಶ ಪರೀಕ್ಷೆ." },
+            weights: { math_sci: 3, theory: 2, govt: 1 },
+            details: {
+                eligibility: { en: "12th Pass with Physics, Chemistry, Biology" },
+                age_limit: { en: "17+ Years" },
+                difficulty: { en: "Very High" },
+                prep_time: { en: "1 - 2 Years" },
+                salary: { en: "Depends on placement/practice" }
+            },
+            roadmap: [
+                { step: { en: "1. Pass 12th Board Exams (PCB)" } },
+                { step: { en: "2. Prepare & Clear NEET UG" } },
+                { step: { en: "3. Attend Counseling for College Allotment" } }
+            ]
+        },
+        {
+            id: "e_kcet",
+            type: "exam",
+            category: "puc_science",
+            title: { en: "KCET (Karnataka State Entrance)", hi: "केसीईटी (कर्नाटक राज्य प्रवेश)", kn: "ಕೆಸಿಇಟಿ (ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪ್ರವೇಶ)" },
+            description: { en: "State level entrance exam for Engineering, Pharmacy, and Agriculture.", hi: "इंजीनियरिंग, फार्मेसी और कृषि के लिए राज्य स्तरीय प्रवेश परीक्षा।", kn: "ಎಂಜಿನಿಯರಿಂಗ್, ಫಾರ್ಮಸಿ ಮತ್ತು ಕೃಷಿಗಾಗಿ ರಾಜ್ಯ ಮಟ್ಟದ ಪ್ರವೇಶ ಪರೀಕ್ಷೆ." },
+            weights: { math_sci: 3, practical: 2, theory: 1 },
+            details: {
+                eligibility: { en: "12th Pass (PUC) with PCM / PCB" },
+                age_limit: { en: "No upper age limit" },
+                difficulty: { en: "High" },
+                prep_time: { en: "1 Year" },
+                salary: { en: "Depends on degree pursued" }
+            },
+            roadmap: [
+                { step: { en: "1. Pass 2nd PUC Exams" } },
+                { step: { en: "2. Clear KCET" } },
+                { step: { en: "3. State counseling for college admission" } }
+            ]
+        }
+    ],
+
+    // Government Exam Updates Data (KCET, NEET, etc.)
+    examUpdates: [
+        {
+            id: "update_kcet",
+            name: "KCET (Karnataka Common Entrance Test)",
+            notificationDate: "January 10, 2026",
+            appStartDate: "January 15, 2026",
+            appEndDate: "February 20, 2026",
+            examDate: "April 18 - 19, 2026",
+            resultDate: "May 25, 2026 (Tentative)",
+            eligibility: { en: "12th Pass (PUC) with Physics, Chemistry, and Math/Biology.", hi: "भौतिकी, रसायन विज्ञान और गणित/जीव विज्ञान के साथ 12वीं (पीयूसी) पास।", kn: "ಭೌತಶಾಸ್ತ್ರ, ರಸಾಯನಶಾಸ್ತ್ರ ಮತ್ತು ಗಣಿತ/ಜೀವಶಾಸ್ತ್ರದೊಂದಿಗೆ 12ನೇ ತೇರ್ಗಡೆ (PUC)." },
+            officialWebsite: "cetonline.karnataka.gov.in/kea/",
+            lastUpdated: "February 28, 2026"
+        },
+        {
+            id: "update_neet",
+            name: "NEET UG (National Eligibility cum Entrance Test)",
+            notificationDate: "February 09, 2026",
+            appStartDate: "February 09, 2026",
+            appEndDate: "March 09, 2026",
+            examDate: "May 03, 2026",
+            resultDate: "June 14, 2026 (Tentative)",
+            eligibility: { en: "12th Pass with Physics, Chemistry, Biology/Biotechnology and English.", hi: "भौतिकी, रसायन विज्ञान, जीव विज्ञान/जैव प्रौद्योगिकी और अंग्रेजी के साथ 12वीं पास।", kn: "ಭೌತಶಾಸ್ತ್ರ, ರಸಾಯನಶಾಸ್ತ್ರ, ಜೀವಶಾಸ್ತ್ರ/ಜೈವಿಕ ತಂತ್ರಜ್ಞಾನ ಮತ್ತು ಇಂಗ್ಲಿಷ್‌ನೊಂದಿಗೆ 12ನೇ ತೇರ್ಗಡೆ." },
+            officialWebsite: "exams.nta.ac.in/NEET/",
+            lastUpdated: "February 15, 2026"
         }
     ]
 };

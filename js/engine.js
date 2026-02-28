@@ -6,6 +6,21 @@ let currentQuestionIndex = 0;
 function initQuiz() {
     currentQuestionIndex = 0;
     AppState.answers = []; // Reset answers
+
+    // Dynamically load the correct question set based on selected level
+    // Fallback to after_10th if somehow not found
+    const levelData = AppData.questionSets[AppState.selectedLevel] || AppData.questionSets['after_10th'];
+    AppData.questions = [];
+
+    if (AppState.selectedInterest === 'courses' || AppState.selectedInterest === 'both') {
+        const courseQs = (levelData.courses || []).map(q => ({ ...q, section: 'courses' }));
+        AppData.questions = AppData.questions.concat(courseQs);
+    }
+    if (AppState.selectedInterest === 'exams' || AppState.selectedInterest === 'both') {
+        const examQs = (levelData.exams || []).map(q => ({ ...q, section: 'exams' }));
+        AppData.questions = AppData.questions.concat(examQs);
+    }
+
     renderNextQuestion();
 }
 
@@ -23,15 +38,31 @@ function renderNextQuestion() {
     const lang = AppState.language;
     const progressPercent = ((currentQuestionIndex + 1) / AppData.questions.length) * 100;
 
+    let sectionLabelHtml = '';
+    if (q.section === 'courses') {
+        sectionLabelHtml = `<div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--primary-color); text-align: center; margin-bottom: 1rem;"><span data-i18n="interest_courses">Academic Courses / Degrees</span></div>`;
+    } else if (q.section === 'exams') {
+        sectionLabelHtml = `<div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--secondary-color); text-align: center; margin-bottom: 1rem;"><span data-i18n="interest_exams">Government / Competitive Exams</span></div>`;
+    }
+
     let html = `
         <div class="glass-card screen-fade-enter" style="max-width: 800px; margin: 2rem auto;">
             <div class="progress-container">
                 <div class="progress-bar" style="width: ${progressPercent}%"></div>
             </div>
             
-            <span style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; margin-bottom: 0.5rem; display: block;">
-                Question ${currentQuestionIndex + 1} of ${AppData.questions.length}
-            </span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; display: block;">
+                    Question ${currentQuestionIndex + 1} of ${AppData.questions.length}
+                </span>
+                ${currentQuestionIndex > 0 ? `
+                <button onclick="goBackQuestion()" class="back-btn" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 0.25rem; font-size: 0.875rem; font-family: inherit; padding: 0.25rem; border-radius: var(--radius-sm); transition: color 0.2s;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    <span data-i18n="btn_back">Back</span>
+                </button>
+                ` : ''}
+            </div>
+            ${sectionLabelHtml}
             <h2 class="screen-title" style="margin-bottom: 2rem;">${q.text[lang]}</h2>
             
             <div class="options-list">
@@ -51,9 +82,30 @@ function renderNextQuestion() {
     `;
 
     qContainer.innerHTML = html;
+    updateTranslations();
+
 }
 
 // Global function to attach to onClick
+window.goBackQuestion = function () {
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        // Remove the last stored answer
+        AppState.answers.pop();
+
+        // Animate and go back
+        const qContainer = document.getElementById('quiz-container');
+        if (qContainer && qContainer.firstElementChild) {
+            qContainer.firstElementChild.style.opacity = '0';
+            qContainer.firstElementChild.style.transform = 'translateY(10px)'; // Reverse animation
+        }
+
+        setTimeout(() => {
+            renderNextQuestion();
+        }, 200);
+    }
+};
+
 window.selectAnswer = function (optIdx) {
     const q = AppData.questions[currentQuestionIndex];
     const selectedOption = q.options[optIdx];
@@ -61,6 +113,7 @@ window.selectAnswer = function (optIdx) {
     // Save the selection
     AppState.answers.push({
         qId: q.id,
+        section: q.section,
         weights: selectedOption.weights
     });
 
@@ -91,25 +144,31 @@ function finishQuiz() {
 
 // Logic Engine Core
 function calculateResults() {
-    // 1. Calculate User Profile Vector based on answers
-    const userProfile = {
+    // 1. Calculate isolated profiles based on answers
+    const userProfileCourses = {
+        math_sci: 0, commerce: 0, arts: 0,
+        govt: 0, private: 0,
+        physical: 0, practical: 0, theory: 0
+    };
+
+    const userProfileExams = {
         math_sci: 0, commerce: 0, arts: 0,
         govt: 0, private: 0,
         physical: 0, practical: 0, theory: 0
     };
 
     AppState.answers.forEach((ans, index) => {
-        // Boost the weighting of the first question (Subjects preference)
-        const weightMultiplier = (index === 0) ? 2 : 1;
+        const profileToUpdate = ans.section === 'courses' ? userProfileCourses : userProfileExams;
 
         for (const [key, val] of Object.entries(ans.weights)) {
-            if (userProfile[key] !== undefined) {
-                userProfile[key] += (val * weightMultiplier);
+            if (profileToUpdate[key] !== undefined) {
+                profileToUpdate[key] += val;
             }
         }
     });
 
-    console.log("Calculated User Profile:", userProfile);
+    console.log("Calculated Course Profile:", userProfileCourses);
+    console.log("Calculated Exam Profile:", userProfileExams);
 
     // 2. Score Courses based on User Profile and Selected Level
     const scoredCourses = AppData.courses
@@ -117,7 +176,7 @@ function calculateResults() {
         .map(c => {
             let score = 0;
             for (const [key, val] of Object.entries(c.weights)) {
-                score += (userProfile[key] || 0) * val;
+                score += (userProfileCourses[key] || 0) * val;
             }
             return { ...c, matchScore: score };
         })
@@ -125,13 +184,34 @@ function calculateResults() {
 
     // 3. Score Exams
     const scoredExams = AppData.exams
-        .filter(e => e.allow_all || e.category === AppState.selectedLevel || e.category === 'all')
+        .filter(e => e.allow_all || e.category === AppState.selectedLevel || e.category === 'all' || (e.category === 'puc_science' && AppState.selectedLevel.startsWith('puc_science')))
+        .filter(e => {
+            if (e.id === 'e_neet') {
+                return AppState.selectedLevel === 'puc_science_pcmb';
+            }
+            if (e.id === 'e_kcet') {
+                return AppState.selectedLevel === 'puc_science_pcmb' || AppState.selectedLevel === 'puc_science_pcmc';
+            }
+            return true;
+        })
         .map(e => {
             let score = 0;
             for (const [key, val] of Object.entries(e.weights)) {
-                score += (userProfile[key] || 0) * val;
+                score += (userProfileExams[key] || 0) * val;
             }
-            return { ...e, matchScore: score };
+
+            let dynamicLabel = null;
+            if (e.id === 'e_neet') {
+                dynamicLabel = { en: "Recommended because you selected PCMB", hi: "अनुशंसित क्योंकि आपने पीसीएमबी चुना था", kn: "ನೀವು PCMB ಆಯ್ಕೆ ಮಾಡಿದ್ದರಿಂದ ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ" };
+            } else if (e.id === 'e_kcet') {
+                if (AppState.selectedLevel === 'puc_science_pcmb') {
+                    dynamicLabel = { en: "Recommended for medical, dental, and allied health courses", hi: "मेडिकल, डेंटल और संबद्ध स्वास्थ्य पाठ्यक्रमों के लिए अनुशंसित", kn: "ವೈದ್ಯಕೀಯ, ದಂತ ಮತ್ತು ಕೆಲವು ಆರೋಗ್ಯ ಕೋರ್ಸ್‌ಗಳಿಗೆ ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ" };
+                } else if (AppState.selectedLevel === 'puc_science_pcmc') {
+                    dynamicLabel = { en: "Recommended for engineering and technology courses", hi: "इंजीनियरिंग और प्रौद्योगिकी पाठ्यक्रमों के लिए अनुशंसित", kn: "ಎಂಜಿನಿಯರಿಂಗ್ ಮತ್ತು ತಂತ್ರಜ್ಞಾನ ಕೋರ್ಸ್‌ಗಳಿಗೆ ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ" };
+                }
+            }
+
+            return { ...e, matchScore: score, dynamicLabel };
         })
         .sort((a, b) => b.matchScore - a.matchScore);
 
@@ -146,32 +226,39 @@ function renderRecommendations() {
 
     const lang = AppState.language;
 
+    const showCourses = AppState.selectedInterest === 'courses' || AppState.selectedInterest === 'both';
+    const showExams = AppState.selectedInterest === 'exams' || AppState.selectedInterest === 'both';
+    const gridCols = (showCourses && showExams) ? '1fr 1fr' : '1fr';
+
     let html = `
-        <div class="results-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-            
+        <div class="results-grid" style="display: grid; grid-template-columns: ${gridCols}; gap: 2rem;">
+    `;
+
+    if (showCourses) {
+        html += `
             <!-- Courses Column -->
             <div class="results-col">
                 <h3 style="margin-bottom: 1.5rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;" data-i18n="tab_courses">Courses</h3>
-    `;
+        `;
+        AppState.topCourses.forEach((c, idx) => {
+            html += createResultCard(c, lang, idx + 'c');
+        });
+        html += `</div>`;
+    }
 
-    AppState.topCourses.forEach((c, idx) => {
-        html += createResultCard(c, lang, idx + 'c');
-    });
-
-    html += `
-            </div>
-            
+    if (showExams) {
+        html += `
             <!-- Exams Column -->
             <div class="results-col">
                 <h3 style="margin-bottom: 1.5rem; color: var(--secondary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;" data-i18n="tab_exams">Govt Exams</h3>
-    `;
-
-    AppState.topExams.forEach((e, idx) => {
-        html += createResultCard(e, lang, idx + 'e');
-    });
+        `;
+        AppState.topExams.forEach((e, idx) => {
+            html += createResultCard(e, lang, idx + 'e');
+        });
+        html += `</div>`;
+    }
 
     html += `
-            </div>
         </div>
     `;
 
@@ -194,6 +281,12 @@ function createResultCard(item, lang, uniqueId) {
             <h4 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">${item.title[lang]}</h4>
             <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">${item.description[lang]}</p>
             
+            ${item.dynamicLabel ? `
+            <div style="background: rgba(255, 152, 0, 0.1); border-left: 4px solid #ff9800; padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
+                <p style="font-size: 0.875rem; font-weight: 600; color: var(--text-main); margin: 0;">${item.dynamicLabel[lang] || item.dynamicLabel.en}</p>
+            </div>
+            ` : ''}
+
             <div style="background: rgba(255,255,255,0.3); padding: 0.75rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
                 <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--primary-color);" data-i18n="why_suits">Why this suits you:</span>
                 <p style="font-size: 0.875rem; color: var(--text-main); margin-top: 0.25rem;">${whyText}</p>
