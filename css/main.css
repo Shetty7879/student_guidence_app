@@ -93,6 +93,46 @@ body {
     overflow-x: hidden;
 }
 
+/* Strict minimal auth background */
+body.auth-minimal-bg {
+    background: linear-gradient(to bottom, #0f172a, #1e293b) !important;
+}
+
+body.auth-minimal-bg .app-header,
+body.auth-minimal-bg .app-footer {
+    display: none !important;
+}
+
+body.auth-minimal-bg .app-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1rem;
+}
+
+body.auth-minimal-bg .content-area {
+    flex-grow: 0;
+    width: 100%;
+}
+
+/* Auth Minimal Placeholder Styling */
+.auth-minimal-input::placeholder {
+    color: #6b7280;
+    opacity: 1;
+    /* Firefox override */
+}
+
+/* Auth Minimal Focus State and Dynamic Hint */
+.auth-minimal-input:focus {
+    border-color: #4f46e5 !important;
+}
+
+.auth-minimal-input:focus~.auth-focus-hint {
+    display: block !important;
+}
+
+
 /* App Layout */
 .app-container {
     max-width: 1200px;

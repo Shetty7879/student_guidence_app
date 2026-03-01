@@ -1,7 +1,7 @@
 // app.js - Main Application State and Routing
 
 const AppState = {
-    currentScreen: 'login', // login, otp, welcome, level_select, quiz, calculating, results, details
+    currentScreen: 'signup', // login, otp, welcome, level_select, quiz, calculating, results, details
     isAuthenticated: false,
     authMethod: 'email', // email or mobile
     authType: 'signup', // signin or signup
@@ -34,26 +34,30 @@ function initApp() {
     initTheme();
 
     // Setup language listener
-    DOM.langSelect.addEventListener('change', (e) => {
+    DOM.langSelect?.addEventListener('change', (e) => {
         AppState.language = e.target.value;
         updateTranslations();
         renderScreen(AppState.currentScreen); // Re-render current screen with new language
     });
 
     // Setup Theme listener
-    DOM.themeToggleBtn.addEventListener('click', toggleTheme);
+    DOM.themeToggleBtn?.addEventListener('click', toggleTheme);
 
     // Profile menu listeners
     if (DOM.profileBtn) {
         DOM.profileBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            DOM.profileDropdown.classList.toggle('hidden');
+            DOM.profileDropdown?.classList.toggle('hidden');
         });
     }
 
     // Initialize Notifications
     if (typeof NotificationManager !== 'undefined') {
-        NotificationManager.init();
+        try {
+            NotificationManager.init();
+        } catch (e) {
+            console.error('Error in NotificationManager.init:', e);
+        }
     }
 
     // Close dropdowns on outside click
@@ -127,78 +131,118 @@ function initApp() {
     updateTranslations();
 
     // Small delay to hide loader and show first screen smoothly
+    console.log('Before setTimeout in initApp');
     setTimeout(() => {
-        if (AppState.isAuthenticated) {
-            renderScreen('welcome');
-        } else {
-            renderScreen('login');
+        console.log('Inside setTimeout, isAuthenticated:', AppState.isAuthenticated);
+        try {
+            // Check Hash for initial routing if unauthenticated
+            const hash = window.location.hash;
+
+            if (AppState.isAuthenticated) {
+                renderScreen('welcome');
+            } else if (hash === '#/create-account') {
+                renderScreen('signup');
+            } else {
+                // Default to login and sync hash
+                if (hash !== '#/login') window.location.hash = '#/login';
+                renderScreen('login');
+            }
+
+            // Listen for hash changes for back/forward navigation or manual entry
+            window.addEventListener('hashchange', () => {
+                if (AppState.isAuthenticated) return;
+                const newHash = window.location.hash;
+                if (newHash === '#/create-account') {
+                    renderScreen('signup');
+                } else if (newHash === '#/login') {
+                    renderScreen('login');
+                }
+            });
+        } catch (e) {
+            console.error('Error in initApp setTimeout:', e);
         }
     }, 500);
 }
 
 function renderScreen(screenName) {
-    AppState.currentScreen = screenName;
-    DOM.mainArea.innerHTML = ''; // Clear container
+    try {
+        AppState.currentScreen = screenName;
+        DOM.mainArea.innerHTML = ''; // Clear container
 
-    // Update Profile Menu visibility based on Auth state
-    if (AppState.isAuthenticated) {
-        DOM.profileWrapper.classList.remove('hidden');
-        if (DOM.notifWrapper) DOM.notifWrapper.classList.remove('hidden');
-    } else {
-        DOM.profileWrapper.classList.add('hidden');
-        if (DOM.notifWrapper) DOM.notifWrapper.classList.add('hidden');
+        // Strictly enforce auth background
+        if (screenName === 'signup' || screenName === 'login' || screenName === 'otp') {
+            document.body.classList.add('auth-minimal-bg');
+        } else {
+            document.body.classList.remove('auth-minimal-bg');
+        }
+
+        // Update Profile Menu visibility based on Auth state
+        if (AppState.isAuthenticated) {
+            DOM.profileWrapper.classList.remove('hidden');
+            if (DOM.notifWrapper) DOM.notifWrapper.classList.remove('hidden');
+        } else {
+            DOM.profileWrapper.classList.add('hidden');
+            if (DOM.notifWrapper) DOM.notifWrapper.classList.add('hidden');
+        }
+
+        let template = '';
+
+        switch (screenName) {
+            case 'login':
+                template = renderLoginScreen();
+                break;
+            case 'signup':
+                template = renderSignupScreen();
+                break;
+            case 'otp':
+                template = renderOtpScreen();
+                break;
+            case 'welcome':
+                template = renderWelcomeScreen();
+                break;
+            case 'level_select':
+                template = renderLevelSelectScreen();
+                break;
+            case 'interest_select':
+                template = renderInterestSelectScreen();
+                break;
+            case 'quiz':
+                template = renderQuizScreen(); // Handled by engine mostly, but stubbing here
+                break;
+            case 'calculating':
+                template = renderCalculatingScreen();
+                break;
+            case 'results':
+                template = renderResultsScreen();
+                break;
+            case 'exam_updates':
+                template = renderExamUpdatesScreen();
+                break;
+            case 'admin_panel':
+                template = renderAdminScreen();
+                break;
+            default:
+                template = `<h2>Error: Screen not found</h2>`;
+        }
+
+        DOM.mainArea.innerHTML = template;
+
+        // Trigger animations
+        const newScreen = DOM.mainArea.firstElementChild;
+        if (newScreen) {
+            newScreen.classList.add('screen-slide-up');
+        }
+
+        // Initialize specific screen JS
+        attachScreenListeners(screenName);
+
+        // Make sure dynamically injected content is translated
+        console.log('Attaching translations...');
+        updateTranslations();
+        console.log('renderScreen completed without errors.');
+    } catch (err) {
+        console.error('Error in renderScreen:', err);
     }
-
-    let template = '';
-
-    switch (screenName) {
-        case 'login':
-            template = renderLoginScreen();
-            break;
-        case 'otp':
-            template = renderOtpScreen();
-            break;
-        case 'welcome':
-            template = renderWelcomeScreen();
-            break;
-        case 'level_select':
-            template = renderLevelSelectScreen();
-            break;
-        case 'interest_select':
-            template = renderInterestSelectScreen();
-            break;
-        case 'quiz':
-            template = renderQuizScreen(); // Handled by engine mostly, but stubbing here
-            break;
-        case 'calculating':
-            template = renderCalculatingScreen();
-            break;
-        case 'results':
-            template = renderResultsScreen();
-            break;
-        case 'exam_updates':
-            template = renderExamUpdatesScreen();
-            break;
-        case 'admin_panel':
-            template = renderAdminScreen();
-            break;
-        default:
-            template = `<h2>Error: Screen not found</h2>`;
-    }
-
-    DOM.mainArea.innerHTML = template;
-
-    // Trigger animations
-    const newScreen = DOM.mainArea.firstElementChild;
-    if (newScreen) {
-        newScreen.classList.add('screen-slide-up');
-    }
-
-    // Initialize specific screen JS
-    attachScreenListeners(screenName);
-
-    // Make sure dynamically injected content is translated
-    updateTranslations();
 }
 
 // ---------------------------------------------------------
@@ -241,109 +285,171 @@ function setTheme(theme) {
 // Screen Templates
 // ---------------------------------------------------------
 
-function renderLoginScreen() {
+function renderSignupScreen() {
     const isEmail = AppState.authMethod === 'email';
-    const isSignUp = AppState.authType === 'signup';
-
-    const titleKey = isSignUp ? 'auth_signup_title' : 'auth_signin_title';
-    const subKey = isSignUp ? 'auth_signup_sub' : 'auth_signin_sub';
-    const switchKey = isSignUp ? 'auth_switch_to_signin' : 'auth_switch_to_signup';
-    const nextAuthType = isSignUp ? 'signin' : 'signup';
-
-    let nameInputHtml = '';
-    if (isSignUp) {
-        nameInputHtml = `
-            <div class="form-group" style="margin-bottom: 0.5rem;">
-                <input type="text" 
-                       id="login-name-input" 
-                       class="form-input" 
-                       placeholder="..."
-                       data-i18n-placeholder="auth_name_placeholder"
-                       value="${AppState.userName || ''}">
-                <div id="login-name-error" class="error-text" data-i18n="auth_name_error">Please enter your full name.</div>
-            </div>
-            <div class="form-group" style="margin-bottom: 1.5rem; text-align: left;">
-                <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;" data-i18n="auth_gender_label">Gender (Optional)</div>
-                <div class="gender-selector">
-                    <div class="gender-btn ${AppState.userGender === 'male' ? 'active' : ''}" data-gender="male" data-i18n="gender_male">Male</div>
-                    <div class="gender-btn ${AppState.userGender === 'female' ? 'active' : ''}" data-gender="female" data-i18n="gender_female">Female</div>
-                    <div class="gender-btn ${AppState.userGender === 'prefer_not_to_say' ? 'active' : ''}" data-gender="prefer_not_to_say" data-i18n="gender_prefer_not_to_say">Prefer not to say</div>
-                </div>
-            </div>
-        `;
-    }
 
     return `
-        <div class="glass-card text-center" style="max-width: 500px; margin: 4rem auto;">
-            <div style="margin-bottom: 2rem;">
-                <div style="width: 64px; height: 64px; background: rgba(79, 70, 229, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
-                <h2 class="screen-title" data-i18n="${titleKey}">Welcome Student</h2>
-                <p class="screen-sub" style="font-size: 1rem; margin-bottom: 1rem;" data-i18n="${subKey}">Please enter your email or mobile number to continue.</p>
+                <h2 style="font-size: 1.5rem; font-weight: 600; color: #f9fafb; margin: 0 0 0.5rem 0;" data-i18n="auth_signup_title">Create Your Account</h2>
+                <p style="font-size: 0.875rem; color: #9ca3af; margin: 0;" data-i18n="auth_signup_sub">Let's personalize your guidance journey</p>
             </div>
 
-            <div class="auth-tabs">
-                <div class="auth-tab ${isEmail ? 'active' : ''}" data-method="email" data-i18n="login_tab_email">Email</div>
-                <div class="auth-tab ${!isEmail ? 'active' : ''}" data-method="mobile" data-i18n="login_tab_mobile">Mobile Number</div>
+            <!-- Full Name Input -->
+            <div style="margin-bottom: 1.5rem; position: relative;">
+                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <input type="text" 
+                       id="signup-name-input" 
+                       class="auth-minimal-input" 
+                       placeholder="Enter full name"
+                       data-i18n-placeholder="auth_name_placeholder"
+                       value="${AppState.userName || ''}"
+                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: #f9fafb; font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
+                <div id="signup-name-error" class="error-text" data-i18n="auth_name_error" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none;">Please enter your full name.</div>
             </div>
 
-            ${nameInputHtml}
+            <!-- Gender Selection -->
+            <div style="margin-bottom: 1.5rem;">
+                <p style="font-size: 0.875rem; font-weight: 500; color: #e2e8f0; margin: 0 0 0.75rem 0.25rem;" data-i18n="auth_gender_label">Select Your Gender</p>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="gender-pill ${AppState.userGender === 'Male' ? 'active' : ''}" data-gender="Male" style="flex: 1; min-height: 80px; padding: 1rem 0.5rem; justify-content: center; flex-direction: row; align-items: center;">
+                            <svg class="gender-icon" style="color: #3b82f6; width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="14" y1="10" x2="21" y2="3"></line><line x1="16" y1="3" x2="21" y2="3"></line><line x1="21" y1="3" x2="21" y2="8"></line></svg>
+                            <span data-i18n="gender_male">Male</span>
+                        </button>
+                        <button class="gender-pill ${AppState.userGender === 'Female' ? 'active' : ''}" data-gender="Female" style="flex: 1; min-height: 80px; padding: 1rem 0.5rem; justify-content: center; flex-direction: row; align-items: center;">
+                            <svg class="gender-icon" style="color: #a855f7; width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="5"></circle><line x1="12" y1="15" x2="12" y2="22"></line><line x1="9" y1="19" x2="15" y2="19"></line></svg>
+                            <span data-i18n="gender_female">Female</span>
+                        </button>
+                    </div>
+                    <div style="display: flex; justify-content: center;">
+                        <button class="gender-pill ${AppState.userGender === 'Other' ? 'active' : ''}" data-gender="Other" style="width: 100%; min-height: 50px; padding: 0.75rem; justify-content: center; flex-direction: row; align-items: center;">
+                            <svg class="gender-icon" style="color: #9ca3af; width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            <span data-i18n="gender_prefer_not_to_say">Prefer not to say</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="signup-gender-error" class="error-text" data-i18n="auth_gender_error" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none;">Please select a gender to continue.</div>
+            </div>
+
+            <!-- Email Input (Force Email Method) -->
+            <div style="margin-bottom: 2rem; position: relative;">
+                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                </div>
+                <input type="email" 
+                       id="signup-input" 
+                       class="auth-minimal-input" 
+                       placeholder="Enter your email address"
+                       data-i18n-placeholder="login_input_email"
+                       value="${AppState.authValue}"
+                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: #f9fafb; font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
+                <div id="signup-error" class="error-text" data-i18n="login_error_email" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none;">
+                    Enter a valid email address.
+                </div>
+            </div>
+
+            <div id="recaptcha-wrapper"></div>
             
-            <div class="form-group">
+            <button id="btn-signup" disabled 
+                    style="width: 100%; padding: 0.875rem; border-radius: 12px; border: none; background: #6366f1; color: white; font-size: 1rem; font-weight: 500; cursor: not-allowed; opacity: 0.5; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2); font-family: var(--font-family);"
+                    data-i18n="signup_btn">
+                Create Account & Send OTP
+            </button>
+            
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <button id="btn-switch-to-login" data-target="login" style="background: transparent; border: none; font-size: 0.875rem; cursor: pointer; padding: 0;">
+                    <span style="color: #9ca3af;" data-i18n="auth_switch_prompt_signin">Already have an account? </span>
+                    <span style="color: #c4b5fd; font-weight: 500;" data-i18n="auth_switch_action_signin">Sign In</span>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function renderLoginScreen() {
+    const isEmail = AppState.authMethod === 'email';
+
+    return `
+        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 1rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <h2 style="font-size: 1.25rem; font-weight: 600; color: #f9fafb; margin: 0 0 0.25rem 0;" data-i18n="auth_signin_title">Welcome Back</h2>
+                <p style="font-size: 0.875rem; color: #9ca3af; margin: 0;" data-i18n="auth_signin_sub">Welcome back! Sign in to continue your journey.</p>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; background: #0f172a; border-radius: 12px; padding: 0.25rem;">
+                    <div class="segment-btn ${isEmail ? 'active' : ''}" data-method="email" data-i18n="login_tab_email" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${isEmail ? '#8b5cf6' : '#9ca3af'}; background: ${isEmail ? '#1e293b' : 'transparent'}; box-shadow: ${isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Email</div>
+                    <div class="segment-btn ${!isEmail ? 'active' : ''}" data-method="mobile" data-i18n="login_tab_mobile" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${!isEmail ? '#8b5cf6' : '#9ca3af'}; background: ${!isEmail ? '#1e293b' : 'transparent'}; box-shadow: ${!isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Mobile Number</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 2rem; position: relative;">
+                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center;">
+                    ${isEmail ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>'}
+                </div>
                 <input type="${isEmail ? 'email' : 'tel'}" 
                        id="login-input" 
-                       class="form-input ${AppState.authError ? 'error-input' : ''}" 
-                       placeholder="..."
+                       class="auth-minimal-input ${AppState.authError ? 'error-input' : ''}" 
+                       placeholder="Enter your ${isEmail ? 'email address' : 'mobile number'}"
                        data-i18n-placeholder="${isEmail ? 'login_input_email' : 'login_input_mobile'}"
-                       value="${AppState.authValue}">
-                <div id="login-error" class="error-text ${AppState.authError ? 'show' : ''}" data-i18n="${isEmail ? 'login_error_email' : 'login_error_mobile'}">
+                       value="${AppState.authValue}"
+                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid ${AppState.authError ? '#ef4444' : '#334155'}; background: #0f172a; color: #f9fafb; font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
+                <div id="login-error" class="error-text ${AppState.authError ? 'show' : ''}" data-i18n="${isEmail ? 'login_error_email' : 'login_error_mobile'}" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: ${AppState.authError ? 'block' : 'none'};">
                     ${isEmail ? 'Please enter a valid email address.' : 'Please enter a valid 10-digit mobile number.'}
                 </div>
             </div>
 
             <div id="recaptcha-wrapper"></div>
             
-            <button id="btn-send-otp" class="btn btn-primary" style="width: 100%; font-size: 1.125rem;">
-                <span id="btn-send-text" data-i18n="login_btn">Send OTP</span>
+            <button id="btn-login" style="width: 100%; padding: 0.875rem; background: #6366f1; color: #ffffff; border: none; border-radius: 12px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2); font-family: var(--font-family);">
+                <span id="btn-login-text" data-i18n="login_btn">Send OTP</span>
             </button>
-            
-            <button id="btn-switch-auth" class="btn btn-secondary" data-target="${nextAuthType}" style="width: 100%; padding: 0.5rem; font-size: 0.875rem; border: none; background: transparent; color: var(--text-muted); margin-top: 1rem;">
-                <span data-i18n="${switchKey}">Don't have an account? Sign Up</span>
-            </button>
+            <p id="login-disabled-hint" style="font-size: 0.7rem; color: #6b7280; margin: 0.5rem 0 0 0; text-align: center;">Enter your details to continue.</p>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <button id="btn-switch-to-signup" data-target="signup" style="background: transparent; border: none; font-size: 0.875rem; cursor: pointer; padding: 0;">
+                    <span style="color: #9ca3af;" data-i18n="auth_switch_prompt_signup">New here? </span>
+                    <span style="color: #4f46e5; font-weight: 500;" data-i18n="auth_switch_action_signup">Create Account</span>
+                </button>
+            </div>
         </div>
     `;
 }
 
 function renderOtpScreen() {
     return `
-        <div class="glass-card text-center" style="max-width: 500px; margin: 4rem auto;">
-            <div style="margin-bottom: 2rem;">
-                <div style="width: 64px; height: 64px; background: rgba(79, 70, 229, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                </div>
-                <h2 class="screen-title" data-i18n="otp_title">Verify Secure OTP</h2>
-                <p class="screen-sub" style="font-size: 1rem; margin-bottom: 0.5rem;" data-i18n="otp_sub">Please enter the 4-digit verification code sent to you.</p>
-                <p style="font-size: 0.875rem; color: var(--primary-color); font-weight: 500; margin-bottom: 1.5rem;">Sent to: ${AppState.authValue}</p>
+        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 1rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <h2 style="font-size: 1.25rem; font-weight: 600; color: #f9fafb; margin: 0 0 0.25rem 0;" data-i18n="otp_title">Verify Secure OTP</h2>
+                <p style="font-size: 0.875rem; color: #9ca3af; margin: 0;" data-i18n="otp_sub">Please enter the 4-digit verification code</p>
             </div>
 
-            <div class="form-group">
+            <div style="margin-bottom: 1.5rem;">
                 <input type="text" 
                        id="otp-input" 
-                       class="form-input" 
-                       style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5em;"
+                       style="width: 100%; text-align: center; font-size: 1.25rem; letter-spacing: 0.5em; padding: 0.75rem; border-radius: 6px; border: 1px solid #374151; background: #0f172a; color: #f9fafb; outline: none;"
                        maxlength="4"
                        placeholder="••••">
-                <div id="otp-error" class="error-text" data-i18n="otp_error_invalid">Invalid OTP. Please try '1234'.</div>
+                <div id="otp-error" class="error-text" data-i18n="otp_error_invalid" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none; text-align: center;">Invalid OTP. Please try '1234'.</div>
             </div>
 
-            <button id="btn-verify-otp" class="btn btn-primary" style="width: 100%; font-size: 1.125rem; margin-bottom: 1rem;">
-                <span data-i18n="otp_btn">Verify & Login</span>
+            <button id="btn-verify-otp" style="width: 100%; padding: 0.75rem; background: #4f46e5; color: #ffffff; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; margin-bottom: 1.5rem;">
+                <span data-i18n="otp_btn">Verify OTP</span>
             </button>
             
-            <button id="btn-resend-otp" class="btn btn-secondary" style="width: 100%; padding: 0.5rem; font-size: 0.875rem; border: none; background: transparent; color: var(--text-muted);">
-                <span data-i18n="otp_resend">Didn't receive the code? Resend</span>
-            </button>
+            <div style="text-align: center;">
+                <button id="btn-resend-otp" style="background: transparent; border: none; color: #9ca3af; font-size: 0.875rem; cursor: pointer; padding: 0;">
+                    <span data-i18n="otp_resend">Resend OTP</span>
+                </button>
+            </div>
         </div>
     `;
 }
@@ -616,22 +722,25 @@ function renderAdminScreen() {
 // ---------------------------------------------------------
 
 function attachScreenListeners(screenName) {
-    if (screenName === 'login') {
-        const tabs = document.querySelectorAll('.segment-btn');
-        const sendBtn = document.getElementById('btn-send-otp');
-        const input = document.getElementById('login-input');
-        const errorText = document.getElementById('login-error');
-        const switchBtn = document.getElementById('btn-switch-auth');
+    if (screenName === 'signup' || screenName === 'login') {
+        const isSignup = screenName === 'signup';
+        const prefix = isSignup ? 'signup' : 'login';
 
-        const nameInput = document.getElementById('login-name-input');
-        const nameErrorText = document.getElementById('login-name-error');
-        const genderBtns = document.querySelectorAll('.gender-card-new');
-        const isSignUp = AppState.authType === 'signup';
+        const tabs = document.querySelectorAll('.segment-btn');
+        const sendBtn = document.getElementById(`btn-${prefix}`);
+        const input = document.getElementById(`${prefix}-input`);
+        const errorText = document.getElementById(`${prefix}-error`);
+        const switchBtn = document.getElementById(`btn-switch-to-${isSignup ? 'login' : 'signup'}`);
+
+        const nameInput = isSignup ? document.getElementById('signup-name-input') : null;
+        const genderBtns = isSignup ? document.querySelectorAll('.gender-pill') : [];
 
         // Translate placeholders dynamically
-        const placeholderKey = input.getAttribute('data-i18n-placeholder');
-        if (placeholderKey && Translations[AppState.language] && Translations[AppState.language][placeholderKey]) {
-            input.placeholder = Translations[AppState.language][placeholderKey];
+        if (input) {
+            const placeholderKey = input.getAttribute('data-i18n-placeholder');
+            if (placeholderKey && Translations[AppState.language] && Translations[AppState.language][placeholderKey]) {
+                input.placeholder = Translations[AppState.language][placeholderKey];
+            }
         }
 
         if (nameInput) {
@@ -642,33 +751,85 @@ function attachScreenListeners(screenName) {
         }
 
         const checkFormValidity = () => {
-            const val = input.value.trim();
             let isValid = true;
 
-            if (AppState.authMethod === 'email') {
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) isValid = false;
-            } else {
-                if (!/^\d{10}$/.test(val)) isValid = false;
+            // Inline error targets
+            const nameErr = document.getElementById('signup-name-error');
+            const genderErr = document.getElementById('signup-gender-error');
+            const emailErr = document.getElementById(isSignup ? 'signup-error' : 'login-error');
+
+            if (isSignup) {
+                // Name Check
+                if (nameInput) {
+                    if (AppState.userName && AppState.userName.trim().length > 0) {
+                        nameInput.style.borderColor = '#334155';
+                        if (nameErr) nameErr.style.display = 'none';
+                    } else {
+                        isValid = false;
+                        nameInput.style.borderColor = '#ef4444';
+                        if (nameErr) nameErr.style.display = 'block';
+                    }
+                }
+
+                // Gender Check
+                if (AppState.userGender) {
+                    if (genderErr) genderErr.style.display = 'none';
+                } else {
+                    isValid = false;
+                    if (genderErr) genderErr.style.display = 'block';
+                }
             }
 
-            if (isSignUp) {
-                if (!AppState.userName || AppState.userName.trim().length === 0) isValid = false;
-                if (!AppState.userGender) isValid = false;
+            // Email Check (Strictly enforced on Signup)
+            if (input) {
+                const val = (input.value || '').trim();
+                let fieldValid = false;
+
+                // For login screen it might be mobile still based on tabs
+                if (!isSignup && AppState.authMethod === 'mobile') {
+                    fieldValid = /^\d{10}$/.test(val);
+                } else {
+                    fieldValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+                }
+
+                if (fieldValid) {
+                    input.classList.remove('error-input');
+                    input.style.borderColor = '#334155';
+                    if (emailErr) emailErr.style.display = 'none';
+                } else {
+                    isValid = false;
+                    // Only show red border if not empty (user is typing/has tested)
+                    if (val.length > 0) {
+                        input.classList.add('error-input');
+                        input.style.borderColor = '#ef4444';
+                        if (emailErr) emailErr.style.display = 'block';
+                    } else {
+                        input.classList.remove('error-input');
+                        input.style.borderColor = '#334155';
+                        if (emailErr) emailErr.style.display = 'none';
+                    }
+                }
             }
 
-            if (isValid) {
-                sendBtn.removeAttribute('disabled');
-            } else {
-                sendBtn.setAttribute('disabled', 'true');
+            if (sendBtn) {
+                if (isValid) {
+                    sendBtn.removeAttribute('disabled');
+                    sendBtn.style.opacity = '1';
+                    sendBtn.style.cursor = 'pointer';
+                } else {
+                    sendBtn.setAttribute('disabled', 'true');
+                    sendBtn.style.opacity = '0.5';
+                    sendBtn.style.cursor = 'not-allowed';
+                }
             }
         };
 
         if (input) {
             input.addEventListener('input', (e) => {
                 AppState.authValue = e.target.value;
-                AppState.authError = false;
-                input.classList.remove('error-input');
-                errorText?.classList.remove('show');
+                checkFormValidity();
+            });
+            input.addEventListener('blur', () => {
                 checkFormValidity();
             });
         }
@@ -676,41 +837,72 @@ function attachScreenListeners(screenName) {
         if (nameInput) {
             nameInput.addEventListener('input', (e) => {
                 AppState.userName = e.target.value;
-                nameErrorText?.classList.remove('show');
                 checkFormValidity();
             });
+            nameInput.addEventListener('blur', () => {
+                checkFormValidity();
+            });
+
+            // Focus Name on Load (Signup only)
+            if (isSignup) {
+                setTimeout(() => {
+                    nameInput.focus();
+                }, 100);
+            }
         }
 
         tabs.forEach(tab => {
             tab.addEventListener('click', (e) => {
                 if (nameInput) AppState.userName = nameInput.value;
                 AppState.authMethod = e.target.dataset.method;
-                AppState.authValue = input.value;
+                AppState.authValue = input ? input.value : '';
                 AppState.authError = false;
-                renderScreen('login');
+                renderScreen(screenName);
             });
         });
 
-        genderBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                // Determine gender card appropriately since the target might be an SVG child
-                const card = e.target.closest('.gender-card-new');
-                if (!card) return;
+        if (isSignup && genderBtns.length > 0) {
+            genderBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const pill = e.target.closest('.gender-pill');
+                    if (!pill) return;
 
-                const selectedGender = card.dataset.gender;
-                AppState.userGender = selectedGender;
+                    const selectedGender = pill.dataset.gender;
+                    AppState.userGender = selectedGender;
 
-                genderBtns.forEach(b => b.classList.remove('active'));
-                card.classList.add('active');
-                checkFormValidity();
+                    // Unstyle all
+                    genderBtns.forEach(b => b.classList.remove('active'));
+
+                    // Style selected
+                    pill.classList.add('active');
+
+                    checkFormValidity();
+
+                    // Shift focus to email input immediately
+                    if (input) {
+                        input.focus();
+                    }
+                });
             });
-        });
+        }
 
         if (switchBtn) {
             switchBtn.addEventListener('click', (e) => {
-                AppState.authType = switchBtn.getAttribute('data-target');
+                const target = switchBtn.getAttribute('data-target');
+                AppState.authType = target;
                 AppState.authError = false;
-                renderScreen('login');
+
+                // Clear state so fields are not auto-copied between screens
+                AppState.authValue = '';
+                AppState.userName = '';
+                AppState.userGender = null;
+
+                if (target === 'signup') {
+                    window.location.hash = '#/create-account';
+                } else if (target === 'login') {
+                    window.location.hash = '#/login';
+                }
             });
         }
 
@@ -722,16 +914,18 @@ function attachScreenListeners(screenName) {
         // Initial validity check
         checkFormValidity();
 
-        sendBtn.addEventListener('click', () => {
-            // Because button is disabled until valid, we can safely proceed.
-            AppState.authValue = input.value.trim();
-            if (nameInput) AppState.userName = nameInput.value.trim();
+        if (sendBtn) {
+            sendBtn.addEventListener('click', () => {
+                // Because button is disabled until valid, we can safely proceed.
+                if (input) AppState.authValue = input.value.trim();
+                if (nameInput) AppState.userName = nameInput.value.trim();
 
-            if (AppState.authMethod === 'mobile') {
-                console.log("Mocking OTP for mobile.");
-            }
-            renderScreen('otp');
-        });
+                if (AppState.authMethod === 'mobile') {
+                    console.log("Mocking OTP for mobile.");
+                }
+                renderScreen('otp');
+            });
+        }
     }
 
     if (screenName === 'otp') {

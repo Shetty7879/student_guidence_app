@@ -4,6 +4,10 @@ const NotificationManager = {
     notificationsEnabled: true,
     notifications: [],
 
+    save() {
+        localStorage.setItem('sg_notifications', JSON.stringify(this.notifications));
+    },
+
     init() {
         // Load preferences
         const prefs = localStorage.getItem('sg_notif_prefs');
