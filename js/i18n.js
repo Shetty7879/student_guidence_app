@@ -37,6 +37,14 @@ const Translations = {
         why_suits: "Why this suits you:",
         view_details: "View Details & Roadmap",
         close: "Close",
+
+        // Education Levels
+        level_diploma: "Polytechnic / Diploma",
+        level_iti: "ITI (Industrial Training)",
+
+        // Error Messages
+        err_select_option: "Please select an option to proceed.",
+
         login_title: "Welcome Student",
         login_sub: "Please enter your email or mobile number to continue.",
         auth_signin_title: "Welcome Back",
@@ -140,6 +148,14 @@ const Translations = {
         why_suits: "यह आपके लिए क्यों उपयुक्त है:",
         view_details: "विवरण और रोडमैप देखें",
         close: "बंद करें",
+
+        // Education Levels
+        level_diploma: "पॉलिटेक्निक / डिप्लोमा",
+        level_iti: "आईटीआई (औद्योगिक प्रशिक्षण)",
+
+        // Error Messages
+        err_select_option: "कृपया आगे बढ़ने के लिए एक विकल्प चुनें।",
+
         login_title: "स्वागत है छात्र",
         login_sub: "कृपया जारी रखने के लिए अपना ईमेल या मोबाइल नंबर दर्ज करें।",
         auth_signin_title: "वापसी पर स्वागत है",
@@ -246,6 +262,14 @@ const Translations = {
         why_suits: "ಇದು ನಿಮಗೆ ಏಕೆ ಸೂಕ್ತವಾಗಿದೆ:",
         view_details: "ವಿವರಗಳು ಮತ್ತು ಮಾರ್ಗಸೂಚಿಯನ್ನು ವೀಕ್ಷಿಸಿ",
         close: "ಮುಚ್ಚಿ",
+
+        // Education Levels
+        level_diploma: "ಪಾಲಿಟೆಕ್ನಿಕ್ / ಡಿಪ್ಲೊಮಾ",
+        level_iti: "ಐಟಿಐ (ಕೈಗಾರಿಕಾ ತರಬೇತಿ)",
+
+        // Error Messages
+        err_select_option: "ದಯವಿಟ್ಟು ಮುಂದುವರಿಯಲು ಒಂದು ಆಯ್ಕೆಯನ್ನು ಆರಿಸಿ.",
+
         login_title: "ಸ್ವಾಗತ ವಿದ್ಯಾರ್ಥಿ",
         login_sub: "ಮುಂದುವರೆಯಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್ ಅಥವಾ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ.",
         auth_signin_title: "ಮರಳಿ ಸ್ವಾಗತ",

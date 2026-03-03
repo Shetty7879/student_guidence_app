@@ -1,5 +1,4 @@
-// data.js - Static Content Database
-
+// Temporary overwrite file to build new courses object without relying on node/regex search.
 const AppData = {
     // Profiling Dimensions:
     // math_sci, commerce, arts, govt, private, physical, practical, theory
@@ -188,7 +187,7 @@ const AppData = {
                     },
                     options: [
                         { ans: { en: "Banking & Finance Sector (IBPS/SBI)", hi: "बैंकिंग और वित्त क्षेत्र (IBPS/SBI)", kn: "ಬ್ಯಾಂಕಿಂಗ್ ಮತ್ತು ಹಣಕಾಸು ವಲಯ (IBPS/SBI)" }, weights: { commerce: 2, govt: 3, theory: 2 } },
-                        { ans: { en: "Administrative & Clerical (SSC CHSL/CGL)", hi: "प्रशासनिक और लिपिक (SSC CHSL/CGL)", kn: "ಆಡಳಿತ ಮತ್ತು ಕ್ಲೆರಿಕಲ್ (SSC CHSL/CGL)" }, weights: { govt: 3, theory: 2 } },
+                        { ans: { en: "Administrative & Clerical (SSC CHSL/CGL)", hi: "प्रशासनिक और लिपिक (SSC CHSL/CGL)", kn: "ಆಡಳಿತ और ಕ್ಲೆರಿಕಲ್ (SSC CHSL/CGL)" }, weights: { govt: 3, theory: 2 } },
                         { ans: { en: "Police or Defense Forces", hi: "पुलिस या रक्षा बल", kn: "ಪೊಲೀಸ್ ಅಥವಾ ರಕ್ಷಣಾ ಪಡೆಗಳು" }, weights: { physical: 3, govt: 2 } }
                     ]
                 }
@@ -242,44 +241,42 @@ const AppData = {
 
     // Database of Courses
     courses: [
+        // AFTER 10th COURSES
         {
-            id: "c_puc_pcmc",
+            id: "c_puc_science_pcmb",
+            type: "course",
+            category: "after_10th",
+            title: { en: "PUC Science (PCMB)", hi: "पीयूसी विज्ञान (PCMB)", kn: "ಪಿಯುಸಿ ವಿಜ್ಞಾನ (PCMB)" },
+            description: { en: "Pre-University Course focusing on Physics, Chemistry, Maths, and Biology. Leads to Medical and Engineering.", hi: "विज्ञान और जीव विज्ञान पर केंद्रित प्री-यूनिवर्सिटी कोर्स।", kn: "ಭೌತಶಾಸ್ತ್ರ, ರಸಾಯನಶಾಸ್ತ್ರ, ಗಣಿತ ಮತ್ತು ಜೀವಶಾಸ್ತ್ರವನ್ನು ಒಳಗೊಂಡಿರುವ ಪಿಯು ಕೋರ್ಸ್." },
+            weights: { math_sci: 3, theory: 2, govt: 1 },
+            details: {
+                eligibility: { en: "10th Pass" },
+                duration: { en: "2 Years" },
+                scope: { en: "Medical, Agriculture, Pure Sciences, Engineering via PCMB" },
+                salary: { en: "Stepping stone to graduation" }
+            },
+            roadmap: [
+                { step: { en: "1. Pass 10th Class" } },
+                { step: { en: "2. Enroll in PUC Science (PCMB)" } },
+                { step: { en: "3. Prepare for NEET/CET during PUC" } }
+            ]
+        },
+        {
+            id: "c_puc_science_pcmc",
             type: "course",
             category: "after_10th",
             title: { en: "PUC Science (PCMC)", hi: "पीयूसी विज्ञान (PCMC)", kn: "ಪಿಯುಸಿ ವಿಜ್ಞಾನ (PCMC)" },
-            description: { en: "Pre-University Course focusing on Physics, Chemistry, Maths, and Computer Science.", hi: "भौतिकी, रसायन विज्ञान, गणित और कंप्यूटर विज्ञान पर केंद्रित प्री-यूनिवर्सिटी कोर्स।", kn: "ಭೌತಶಾಸ್ತ್ರ, ರಸಾಯನಶಾಸ್ತ್ರ, ಗಣಿತ ಮತ್ತು ಕಂಪ್ಯೂಟರ್ ವಿಜ್ಞಾನವನ್ನು ಕೇಂದ್ರೀಕರಿಸುವ ಪಿಯುಸಿ." },
+            description: { en: "Pre-University Course focusing on Computers, Maths, Physics, Chemistry. Ideal for Engineering/IT.", hi: "इंजीनियरिंग के लिए विज्ञान (PCMC) कोर्स।", kn: "ಟೆಕ್ನಾಲಜಿ ಕ್ಷೇತ್ರಕ್ಕೆ ಸೂಕ್ತವಾದ ಪಿಯು ಕೋರ್ಸ್." },
             weights: { math_sci: 3, practical: 2, theory: 1, private: 1 },
             details: {
                 eligibility: { en: "10th Pass" },
                 duration: { en: "2 Years" },
                 scope: { en: "Engineering, BCA, Architecture, Defense" },
-                salary: { en: "N/A - Stepping stone for degree" }
+                salary: { en: "Stepping stone to graduation" }
             },
             roadmap: [
                 { step: { en: "1. Pass 10th Class" } },
-                { step: { en: "2. Enroll in PUC Science (PCMC)" } },
-                { step: { en: "3. Prepare for CET/JEE/NDA during PUC" } },
-                { step: { en: "4. Pursue B.Tech or B.Sc" } }
-            ]
-        },
-        {
-            id: "c_puc_pcmb",
-            type: "course",
-            category: "after_10th",
-            title: { en: "PUC Science (PCMB)", hi: "पीयूसी विज्ञान (PCMB)", kn: "ಪಿಯುಸಿ ವಿಜ್ಞಾನ (PCMB)" },
-            description: { en: "Pre-University Course focusing on Physics, Chemistry, Maths, and Biology.", hi: "भौतिकी, रसायन विज्ञान, गणित और जीव विज्ञान पर केंद्रित प्री-यूनिवर्सिटी कोर्स।", kn: "ಭೌತಶಾಸ್ತ್ರ, ರಸಾಯನಶಾಸ್ತ್ರ, ಗಣಿತ ಮತ್ತು ಜೀವಶಾಸ್ತ್ರವನ್ನು ಕೇಂದ್ರೀಕರಿಸುವ ಪಿಯುಸಿ." },
-            weights: { math_sci: 3, theory: 2, govt: 1 },
-            details: {
-                eligibility: { en: "10th Pass" },
-                duration: { en: "2 Years" },
-                scope: { en: "Medical, Agriculture, Pure Sciences" },
-                salary: { en: "N/A - Stepping stone for degree" }
-            },
-            roadmap: [
-                { step: { en: "1. Pass 10th Class" } },
-                { step: { en: "2. Enroll in PUC Science (PCMB)" } },
-                { step: { en: "3. Prepare for NEET/CET during PUC" } },
-                { step: { en: "4. Pursue MBBS, B.Sc Ag, or B.Sc" } }
+                { step: { en: "2. Enroll in PUC Science (PCMC)" } }
             ]
         },
         {
@@ -287,27 +284,42 @@ const AppData = {
             type: "course",
             category: "after_10th",
             title: { en: "PUC Commerce", hi: "पीयूसी वाणिज्य", kn: "ಪಿಯುಸಿ ವಾಣಿಜ್ಯ" },
-            description: { en: "Pre-University Course focusing on Business, Accounts, Economics.", hi: "व्यवसाय, लेखा, अर्थशास्त्र पर केंद्रित प्री-यूनिवर्सिटी कोर्स।", kn: "ವ್ಯವಹಾರ, ಅಕೌಂಟ್ಸ್, ಅರ್ಥಶಾಸ್ತ್ರವನ್ನು ಕೇಂದ್ರೀಕರಿಸುವ ಪಿಯುಸಿ." },
+            description: { en: "Pre-University Course focusing on Business, Accounts, Economics.", hi: "व्यवसाय और एकाउंट्स आधारित कोर्स।", kn: "ವಾಣಿಜ್ಯ, ಅಕೌಂಟ್ಸ್ ಮತ್ತು ಅರ್ಥಶಾಸ್ತ್ರದ ಕೋರ್ಸ್." },
             weights: { commerce: 3, theory: 2, private: 1 },
             details: {
                 eligibility: { en: "10th Pass" },
                 duration: { en: "2 Years" },
                 scope: { en: "CA, CS, B.Com, BBA" },
-                salary: { en: "N/A - Stepping stone for degree" }
+                salary: { en: "Stepping stone to graduation" }
             },
             roadmap: [
-                { step: { en: "1. Pass 10th Class" } },
-                { step: { en: "2. Enroll in PUC Commerce" } },
-                { step: { en: "3. Prepare for CA Foundation" } },
-                { step: { en: "4. Pursue B.Com/BBA" } }
+                { step: { en: "1. Enroll in PUC Commerce" } },
+                { step: { en: "2. Pursue B.Com/BBA or Professional degrees" } }
             ]
         },
         {
-            id: "c_diploma",
+            id: "c_puc_arts",
             type: "course",
             category: "after_10th",
-            title: { en: "Polytechnic / Diploma in Engineering", hi: "पॉलिटेक्निक / इंजीनियरिंग में डिप्लोमा", kn: "ಪಾಲಿಟೆಕ್ನಿಕ್ / ಎಂಜಿನಿಯರಿಂಗ್ ಡಿಪ್ಲೋಮಾ" },
-            description: { en: "3-year practical engineering course (Civil, Mech, Comp Sc).", hi: "3 वर्षीय व्यावहारिक इंजीनियरिंग पाठ्यक्रम।", kn: "3 ವರ್ಷದ ಪ್ರಾಯೋಗಿಕ ಎಂಜಿನಿಯರಿಂಗ್ ಕೋರ್ಸ್." },
+            title: { en: "PUC Arts", hi: "पीयूसी कला", kn: "ಪಿಯುಸಿ ಕಲೆ" },
+            description: { en: "Pre-University Arts focusing on Humanities, Languages, History, Sociology.", hi: "मानविकी और भाषाओं पर कोर्स।", kn: "ಮಾನವಿಕ ಮತ್ತು ಭಾಷೆಗಳ ಅಧ್ಯಯನ." },
+            weights: { arts: 3, theory: 2, govt: 1 },
+            details: {
+                eligibility: { en: "10th Pass" },
+                duration: { en: "2 Years" },
+                scope: { en: "BA, LLB, Civil Services Preparation" },
+                salary: { en: "Stepping stone to graduation" }
+            },
+            roadmap: [
+                { step: { en: "1. Enroll in PUC Arts" } }
+            ]
+        },
+        {
+            id: "c_diploma_polytechnic",
+            type: "course",
+            category: "after_10th",
+            title: { en: "Polytechnic / Diploma in Engineering", hi: "पॉलिटेक्निक", kn: "ಪಾಲಿಟೆಕ್ನಿಕ್ ಡಿಪ್ಲೊಮಾ" },
+            description: { en: "3-year practical engineering course (Mechanical, Civil, Electrical, CS).", hi: "3 वर्षीय व्यावहारिक इंजीनियरिंग पाठ्यक्रम।", kn: "3 ವರ್ಷದ ಪ್ರಾಯೋಗಿಕ ಎಂಜಿನಿಯರಿಂಗ್ ಕೋರ್ಸ್." },
             weights: { math_sci: 2, practical: 3, private: 1, govt: 1 },
             details: {
                 eligibility: { en: "10th Pass (minimum 35%)" },
@@ -316,151 +328,212 @@ const AppData = {
                 salary: { en: "₹2.0 - 4.0 Lakhs / year initially" }
             },
             roadmap: [
-                { step: { en: "1. Pass 10th Board Exams" } },
-                { step: { en: "2. Clear State Diploma Entrance/Merit" } },
-                { step: { en: "3. Complete 3-year Diploma" } },
-                { step: { en: "4. Join job as Junior Engineer OR pursue B.Tech (Lateral Entry)" } }
+                { step: { en: "1. Clear State Diploma Entrance/Merit" } },
+                { step: { en: "2. Complete 3-year Diploma" } },
+                { step: { en: "3. Join job OR pursue B.Tech (Lateral Entry)" } }
+            ]
+        },
+        {
+            id: "c_diploma_paramedical",
+            type: "course",
+            category: "after_10th",
+            title: { en: "Paramedical Diploma", hi: "पैरामेडिकल डिप्लोमा", kn: "ಪ್ಯಾರಾಮೆಡಿಕಲ್ ಡಿಪ್ಲೊಮಾ" },
+            description: { en: "Health industry diploma for lab tech, X-Ray, D.Pharma.", hi: "स्वास्थ्य उद्योग डिप्लोमा।", kn: "ಆರೋಗ್ಯ ಕ್ಷೇತ್ರದ ಡಿಪ್ಲೊಮಾ." },
+            weights: { math_sci: 1, practical: 2, govt: 1 },
+            details: {
+                eligibility: { en: "10th Pass" },
+                duration: { en: "2 to 3 Years" },
+                scope: { en: "Lab Technician, Pharmacist, Clinical Assistant" },
+                salary: { en: "₹1.5 - 3.5 Lakhs / year initially" }
+            },
+            roadmap: [
+                { step: { en: "1. Pass 10th" } },
+                { step: { en: "2. Join DMLT or D.Pharma" } }
             ]
         },
         {
             id: "c_iti",
             type: "course",
             category: "after_10th",
-            title: { en: "ITI (Industrial Training Institute)", hi: "आईटीआई (औद्योगिक प्रशिक्षण संस्थान)", kn: "ಐಟಿಐ (ಕೈಗಾರಿಕಾ ತರಬೇತಿ ಸಂಸ್ಥೆ)" },
-            description: { en: "Vocational training in trades like Electrician, Fitter, Welder.", hi: "इलेक्ट्रीशियन, फिटर जैसे ट्रेडों में व्यावसायिक प्रशिक्षण।", kn: "ಎಲೆಕ್ಟ್ರಿಷಿಯನ್, ಫಿಟ್ಟರ್ ಮುಂತಾದ ವೃತ್ತಿಗಳಲ್ಲಿ ತರಬೇತಿ." },
+            title: { en: "ITI (Industrial Training)", hi: "आईटीआई", kn: "ಐಟಿಐ" },
+            description: { en: "Vocational training in trades like Electrician, Fitter, Welder, COPA.", hi: "व्यावसायिक प्रशिक्षण।", kn: "ವೃತ್ತಿಪರ ತರಬೇತಿ." },
             weights: { practical: 3, govt: 1, math_sci: 1 },
             details: {
-                eligibility: { en: "10th Pass (8th pass for some trades)" },
+                eligibility: { en: "10th Pass" },
                 duration: { en: "1 to 2 Years" },
-                scope: { en: "Technician in Railways, Factory worker, Self-employed" },
-                salary: { en: "₹1.5 - 2.5 Lakhs / year initially" }
+                scope: { en: "Technician in Railways, Factory worker" },
+                salary: { en: "₹1.5 - 2.5 Lakhs / year" }
             },
             roadmap: [
-                { step: { en: "1. Pass 10th Board Exams" } },
-                { step: { en: "2. Admission to Govt or Private ITI based on merit" } },
-                { step: { en: "3. Complete 1-2 years training" } },
-                { step: { en: "4. Pass All India Trade Test (AITT) for NTC certificate" } },
-                { step: { en: "5. Apprenticeship / Railways / Factory Jobs" } }
+                { step: { en: "1. Admission based on 10th marks" } },
+                { step: { en: "2. Complete Apprentice Training" } }
             ]
         },
-        {
-            id: "c_btech",
-            type: "course",
-            category: "puc_science",
-            title: { en: "B.Tech / B.E (Engineering)", hi: "बी.टेक / बी.ई (इंजीनियरिंग)", kn: "ಬಿ.ಟೆಕ್ / ಬಿ.ಇ (ಎಂಜಿನಿಯರಿಂಗ್)" },
-            description: { en: "Professional undergraduate engineering degree.", hi: "व्यावसायिक स्नातक इंजीनियरिंग डिग्री।", kn: "ವೃತ್ತಿಪರ ಪದವಿಪೂರ್ವ ಎಂಜಿನಿಯರಿಂಗ್ ಪದವಿ." },
-            weights: { math_sci: 3, private: 2, theory: 1, practical: 1 },
-            details: {
-                eligibility: { en: "PUC Science (PCM) mandatory" },
-                duration: { en: "4 Years" },
-                scope: { en: "Software Developer, Core Engineer, Data Scientist" },
-                salary: { en: "₹4.0 - 15.0+ Lakhs / year" }
-            },
-            roadmap: [
-                { step: { en: "1. Pass PUC Science (PCM)" } },
-                { step: { en: "2. Clear CET / JEE Mains / Advanced" } },
-                { step: { en: "3. Complete 4-year degree" } },
-                { step: { en: "4. Campus Placement / Higher Studies (GATE/MS)" } }
-            ]
-        },
-        {
-            id: "c_bcom",
-            type: "course",
-            category: "puc_commerce",
-            title: { en: "B.Com / BBM + CA Foundation", hi: "बी.कॉम / बीबीएम + सीए फाउंडेशन", kn: "ಬಿ.ಕಾಂ / ಬಿಬಿಎಂ + ಸಿಎ ಫೌಂಡೇಶನ್" },
-            description: { en: "Bachelor's in Commerce/Management with prep for Chartered Accountancy.", hi: "चार्टर्ड अकाउंटेंसी की तैयारी के साथ वाणिज्य/प्रबंधन में स्नातक।", kn: "ಲೆಕ್ಕಪರಿಶೋಧನೆ ತಯಾರಿಯೊಂದಿಗೆ ವಾಣಿಜ್ಯ/ನಿರ್ವಹಣೆಯಲ್ಲಿ ಸ್ನಾತಕೋತ್ತರ ಪದವಿ." },
-            weights: { commerce: 3, theory: 2, private: 2 },
-            details: {
-                eligibility: { en: "PUC Commerce/Arts" },
-                duration: { en: "3 Years for degree, +2-3 for CA" },
-                scope: { en: "Accountant, Financial Analyst, Auditor" },
-                salary: { en: "₹3.0 - 8.0 Lakhs / year (Higher for CA)" }
-            },
-            roadmap: [
-                { step: { en: "1. Pass PUC Commerce" } },
-                { step: { en: "2. Enroll in B.Com/BBM" } },
-                { step: { en: "3. Register & clear CA Foundation" } },
-                { step: { en: "4. Complete Articleship & CA Final" } }
-            ]
-        },
-        {
-            id: "c_ba_bed",
-            type: "course",
-            category: "puc_arts",
-            title: { en: "B.A + B.Ed (Integrated Teaching)", hi: "बी.ए + बी.एड (एकीकृत शिक्षण)", kn: "ಬಿ.ಎ + ಬಿ.ಎಡ್ (ಬೋಧನೆ)" },
-            description: { en: "Combined degree for aspiring teachers in Arts subjects.", hi: "कला विषयों में महत्वाकांक्षी शिक्षकों के लिए संयुक्त डिग्री।", kn: "ಕಲಾ ವಿಷಯಗಳಲ್ಲಿ ಶಿಕ್ಷಕರಾಗಲು ಬಯಸುವವರಿಗೆ ಪದವಿ." },
-            weights: { arts: 3, theory: 2, govt: 1 },
-            details: {
-                eligibility: { en: "PUC Arts/Commerce/Science" },
-                duration: { en: "4 Years (Integrated)" },
-                scope: { en: "Govt School Teacher, Private Tutor" },
-                salary: { en: "₹2.5 - 5.0 Lakhs / year" }
-            },
-            roadmap: [
-                { step: { en: "1. Pass PUC" } },
-                { step: { en: "2. Enroll in BA+B.Ed Integrated Course" } },
-                { step: { en: "3. Clear TET (Teacher Eligibility Test)" } },
-                { step: { en: "4. Apply for Govt teaching posts" } }
-            ]
-        },
+
+        // PUC SCIENCE PCMB COURSES
         {
             id: "c_mbbs",
             type: "course",
-            category: "puc_science",
-            title: { en: "MBBS / Medical Sciences", hi: "एमबीबीएस / चिकित्सा विज्ञान", kn: "ಎಂಬಿಬಿಎಸ್ / ವೈದ್ಯಕೀಯ ವಿಜ್ಞಾನ" },
-            description: { en: "Professional degree in medicine and surgery.", hi: "चिकित्सा और सर्जरी में व्यावसायिक डिग्री।", kn: "ವೈದ್ಯಕೀಯ ಮತ್ತು ಶಸ್ತ್ರಚಿಕಿತ್ಸೆಯಲ್ಲಿ ವೃತ್ತಿಪರ ಪದವಿ." },
-            weights: { math_sci: 3, theory: 3, govt: 1, practical: 1 },
+            category: "puc_science_pcmb",
+            title: { en: "MBBS / BDS", hi: "एमबीबीएस", kn: "ಎಂಬಿಬಿಎಸ್" },
+            description: { en: "Professional clinical degrees in medicine and dental surgery.", hi: "मेडिकल डिग्री।", kn: "ವೈದ್ಯಕೀಯ ಪದವಿ." },
+            weights: { math_sci: 3, theory: 2, govt: 1, practical: 1 },
             details: {
-                eligibility: { en: "PUC Science (PCMB/PCB) mandatory" },
-                duration: { en: "5.5 Years" },
+                eligibility: { en: "PUC Science (PCMB) mandatory via NEET" },
+                duration: { en: "5-6 Years" },
                 scope: { en: "Doctor, Surgeon, Medical Officer" },
                 salary: { en: "₹6.0 - 20.0+ Lakhs / year" }
             },
             roadmap: [
-                { step: { en: "1. Pass PUC Science (PCMB)" } },
-                { step: { en: "2. Clear NEET (National Eligibility cum Entrance Test)" } },
-                { step: { en: "3. Complete 5.5-year degree including internship" } },
-                { step: { en: "4. Practice as a Doctor or pursue MD/MS" } }
+                { step: { en: "1. Clear NEET exam" } },
+                { step: { en: "2. Complete medical curriculum + Internship" } }
+            ]
+        },
+        {
+            id: "c_allied_health",
+            type: "course",
+            category: "puc_science_pcmb",
+            title: { en: "Allied Health (B.Sc Nursing, Radiology, Lab Tech)", hi: "नर्सिंग और संबद्ध स्वास्थ्य", kn: "ನರ್ಸಿಂಗ್ ಮತ್ತು ಪೂರಕ ಆರೋಗ್ಯ" },
+            description: { en: "Specialized degrees in Nursing, Physiotherapy, Lab Tech.", hi: "विशेषीकृत स्वास्थ्य डिग्री।", kn: "ನರ್ಸಿಂಗ್, ಫಿಸಿಯೋಥೆರಪಿ." },
+            weights: { math_sci: 2, practical: 2, govt: 1 },
+            details: {
+                eligibility: { en: "PUC Science (PCMB)" },
+                duration: { en: "3-4 Years" },
+                scope: { en: "Nurse, Radiologist, Physiotherapist" },
+                salary: { en: "₹3.0 - 6.0 Lakhs / year" }
+            },
+            roadmap: [
+                { step: { en: "1. Clear Nursing/Allied CET" } },
+                { step: { en: "2. Complete Degree" } }
             ]
         },
         {
             id: "c_bsc_agri",
             type: "course",
-            category: "puc_science",
-            title: { en: "B.Sc Agriculture", hi: "बी.एससी कृषि", kn: "ಬಿ.ಎಸ್ಸಿ ಕೃಷಿ" },
-            description: { en: "Degree focusing on agricultural science and practices.", hi: "कृषि विज्ञान और प्रथाओं पर केंद्रित डिग्री।", kn: "ಕೃಷಿ ವಿಜ್ಞಾನ ಮತ್ತು ಅಭ್ಯಾಸಗಳನ್ನು ಕೇಂದ್ರೀಕರಿಸುವ ಪದವಿ." },
+            category: "puc_science_pcmb",
+            title: { en: "B.Sc Agriculture / Horticulture", hi: "कृषि विज्ञान", kn: "ಕೃಷಿ ವಿಜ್ಞಾನ" },
+            description: { en: "Study of agriculture, food tech, and forestry.", hi: "कृषि अध्ययन।", kn: "ಕೃಷಿ ಮತ್ತು ಆಹಾರ ತಂತ್ರಜ್ಞಾನ." },
             weights: { math_sci: 2, practical: 2, govt: 2 },
             details: {
-                eligibility: { en: "PUC Science (PCMB/PCB)" },
+                eligibility: { en: "PUC Science (PCMB via practical exam/CET)" },
                 duration: { en: "4 Years" },
-                scope: { en: "Agriculture Officer, Research Scientist" },
-                salary: { en: "₹3.0 - 10.0 Lakhs / year" }
-            },
-            roadmap: [
-                { step: { en: "1. Pass PUC Science" } },
-                { step: { en: "2. Clear State Agricultural Entrance Exam" } },
-                { step: { en: "3. Complete 4-year degree" } },
-                { step: { en: "4. Apply for Govt Agriculture Officer posts or Private Sectors" } }
-            ]
-        },
-        {
-            id: "c_bca",
-            type: "course",
-            category: "all",
-            title: { en: "BCA (Bachelor of Computer Applications)", hi: "बीसीए (बैचलर ऑफ कंप्यूटर एप्लीकेशन)", kn: "ಬಿಸಿಎ (ಬ್ಯಾಚುಲರ್ ಆಫ್ ಕಂಪ್ಯೂಟರ್ ಅಪ್ಲಿಕೇಷನ್ಸ್)" },
-            description: { en: "Undergraduate degree in computer applications and software development.", hi: "कंप्यूटर एप्लीकेशन और सॉफ्टवेयर डेवलपमेंट में स्नातक डिग्री।", kn: "ಕಂಪ್ಯೂಟರ್ ಅಪ್ಲಿಕೇಷನ್ಸ್ ಮತ್ತು ಸಾಫ್ಟ್‌ವೇರ್ ಅಭಿವೃದ್ಧಿಯಲ್ಲಿ ಪದವಿಪೂರ್ವ ಪದವಿ." },
-            weights: { math_sci: 1, commerce: 1, practical: 2, private: 3 },
-            details: {
-                eligibility: { en: "PUC (Any Stream with Maths/CS preferred)" },
-                duration: { en: "3 Years" },
-                scope: { en: "Software Developer, System Administrator" },
+                scope: { en: "Agri Officer, Researcher, Food Tech" },
                 salary: { en: "₹3.0 - 8.0 Lakhs / year" }
             },
             roadmap: [
-                { step: { en: "1. Pass PUC" } },
-                { step: { en: "2. Enroll in BCA" } },
-                { step: { en: "3. Learn coding languages (Java, Python, Web Dev)" } },
-                { step: { en: "4. IT Placements / MCA" } }
+                { step: { en: "1. Clear Agricultural Entrance" } }
+            ]
+        },
+
+        // PUC SCIENCE PCMC COURSES
+        {
+            id: "c_btech",
+            type: "course",
+            category: "puc_science_pcmc", // Primarily PCMC, though PCMB can also do Engineering
+            title: { en: "B.E / B.Tech (Core Engineering & IT)", hi: "इंजीनियरिंग", kn: "ಎಂಜಿನಿಯರಿಂಗ್" },
+            description: { en: "Degrees in Computer Science, AI, Mechanical, Civil, Electronics.", hi: "सॉफ्टवेयर और कोर इंजीनियरिंग डिग्री।", kn: "ಎಂಜಿನಿಯರಿಂಗ್, ಐಟಿ ಪದವಿ." },
+            weights: { math_sci: 3, private: 2, theory: 1, practical: 1 },
+            details: {
+                eligibility: { en: "PUC Science with Maths" },
+                duration: { en: "4 Years" },
+                scope: { en: "Software Developer, Design Engineer" },
+                salary: { en: "₹4.0 - 15.0+ Lakhs / year" }
+            },
+            roadmap: [
+                { step: { en: "1. Clear KCET / JEE Mains" } },
+                { step: { en: "2. Complete 4-year technical degree" } }
+            ]
+        },
+        {
+            id: "c_bca_cs",
+            type: "course",
+            category: "puc_science_pcmc",
+            title: { en: "BCA / B.Sc Computer Science", hi: "बीसीए / बी.एससी सीएस", kn: "ಬಿಸಿಎ / ಬಿ.ಎಸ್ಸಿ ಸಿಎಸ್" },
+            description: { en: "Undergrad degrees focused fully on programming and software.", hi: "प्रोग्रामिंग डिग्री।", kn: "ಪ್ರೋಗ್ರಾಮಿಂಗ್ ಪದವಿ." },
+            weights: { math_sci: 1, practical: 2, private: 3 },
+            details: {
+                eligibility: { en: "PUC (Any stream, Maths preferred)" },
+                duration: { en: "3-4 Years" },
+                scope: { en: "Software Engineer, Analyst" },
+                salary: { en: "₹3.0 - 8.0 Lakhs / year" }
+            },
+            roadmap: [
+                { step: { en: "1. College Admissions" } }
+            ]
+        },
+
+        // PUC COMMERCE COURSES
+        {
+            id: "c_bcom",
+            type: "course",
+            category: "puc_commerce",
+            title: { en: "B.Com / BBA (Business Management)", hi: "बी.कॉम / बीबीए", kn: "ಬಿ.ಕಾಂ / ಬಿಬಿಎ" },
+            description: { en: "Degrees focusing on accounting, finance, and business administration.", hi: "व्यवसाय प्रबंधन और लेखांकन।", kn: "ವಾಣಿಜ್ಯ ಮತ್ತು ನಿರ್ವಹಣೆ ಪದವಿ." },
+            weights: { commerce: 3, theory: 2, private: 2 },
+            details: {
+                eligibility: { en: "PUC Commerce/Arts" },
+                duration: { en: "3 Years" },
+                scope: { en: "Accountant, Manager, HR, Sales" },
+                salary: { en: "₹3.0 - 6.0 Lakhs / year" }
+            },
+            roadmap: [
+                { step: { en: "1. Enroll in Degree" } }
+            ]
+        },
+        {
+            id: "c_ca_cs",
+            type: "course",
+            category: "puc_commerce",
+            title: { en: "CA / CS / CMA (Professional Certifications)", hi: "सीए / सीएस", kn: "ಸಿಎ / ಸಿಎಸ್" },
+            description: { en: "High-tier professional courses for corporate finance and compliance.", hi: "पेशेवर चार्टर्ड एकाउंटेंट।", kn: "ವೃತ್ತಿಪರ ಅಕೌಂಟೆಂಟ್ ತರಬೇತಿ." },
+            weights: { commerce: 3, theory: 3, private: 1 },
+            details: {
+                eligibility: { en: "PUC Commerce (Clear Foundation)" },
+                duration: { en: "4-5 Years" },
+                scope: { en: "Corporate Auditor, Tax Consultant" },
+                salary: { en: "₹8.0 - 20.0+ Lakhs / year" }
+            },
+            roadmap: [
+                { step: { en: "1. Clear Foundation Level" } },
+                { step: { en: "2. Articleship Training" } },
+                { step: { en: "3. Clear Final Exam" } }
+            ]
+        },
+
+        // PUC ARTS COURSES
+        {
+            id: "c_ba",
+            type: "course",
+            category: "puc_arts",
+            title: { en: "B.A (History, Sociology, Psychology)", hi: "बी.ए", kn: "ಬಿ.ಎ" },
+            description: { en: "Arts degrees focused on humanities, civil service prep, and psychology.", hi: "मानविकी और मनोविज्ञान।", kn: "ಮಾನವಿಕ ಪದವಿ." },
+            weights: { arts: 3, theory: 3, govt: 1 },
+            details: {
+                eligibility: { en: "PUC Any Stream" },
+                duration: { en: "3 Years" },
+                scope: { en: "Civil Services, Teaching, Social Work" },
+                salary: { en: "₹2.0 - 5.0 Lakhs / year" }
+            },
+            roadmap: [
+                { step: { en: "1. College Application" } }
+            ]
+        },
+        {
+            id: "c_law",
+            type: "course",
+            category: "puc_arts",
+            title: { en: "B.A L.L.B (Integrated Law)", hi: "बी.ए एल.एल.बी (कपूर लॉ)", kn: "ಕಾನೂನು ಪದವಿ" },
+            description: { en: "Integrated 5-year law degree.", hi: "कानून की डिग्री।", kn: "ಕಾನೂನು ಅಧ್ಯಯನ." },
+            weights: { arts: 2, theory: 3, govt: 1 },
+            details: {
+                eligibility: { en: "PUC Any stream (via CLAT or merit)" },
+                duration: { en: "5 Years" },
+                scope: { en: "Advocate, Corporate Lawyer, Judge" },
+                salary: { en: "₹4.0 - 15.0 Lakhs / year" }
+            },
+            roadmap: [
+                { step: { en: "1. Clear CLAT / State Law Entrance" } },
+                { step: { en: "2. Complete 5 Years Integrated Degree" } }
             ]
         }
     ],
@@ -470,133 +543,89 @@ const AppData = {
         {
             id: "e_agniveer",
             type: "exam",
-            category: "after_10th", // Applies to 10th and PUC, logic engine will handle
+            category: "after_10th",
             allow_all: true,
-            title: { en: "Indian Army (Agniveer GD)", hi: "भारतीय सेना (अग्निवीर जीडी)", kn: "ಭಾರತೀಯ ಸೇನೆ (ಅಗ್ನಿವೀರ್ ಜಿಡಿ)" },
-            description: { en: "General Duty soldier recruitment scheme for the Indian Armed Forces.", hi: "भारतीय सशस्त्र बलों के लिए जनरल ड्यूटी सैनिक भर्ती योजना।", kn: "ಭಾರತೀಯ ಸಶಸ್ತ್ರ ಪಡೆಗಳಿಗೆ ಜನರಲ್ ಡ್ಯೂಟಿ ಸೈನಿಕ ನೇಮಕಾತಿ ಯೋಜನೆ." },
+            title: { en: "Indian Army (Agniveer GD)", hi: "भारतीय सेना", kn: "ಭಾರತೀಯ ಸೇನೆ" },
+            description: { en: "General Duty soldier recruitment scheme.", hi: "सैनिक भर्ती योजना।", kn: "ಜನರಲ್ ಡ್ಯೂಟಿ ಸೈನಿಕ ನೇಮಕಾತಿ." },
             weights: { physical: 3, govt: 3, practical: 1 },
             details: {
-                eligibility: { en: "10th Pass (min 45% aggregate)" },
+                eligibility: { en: "10th Pass" },
                 age_limit: { en: "17.5 to 21 Years" },
-                difficulty: { en: "Moderate (High Physical standards)" },
+                difficulty: { en: "Moderate (Physically High)" },
                 prep_time: { en: "6 - 12 Months" },
-                salary: { en: "₹30,000/month initial + allowances + Seva Nidhi" }
+                salary: { en: "₹30,000/month initial" }
             },
-            roadmap: [
-                { step: { en: "1. Pass 10th Class" } },
-                { step: { en: "2. Physical prep: Running, Pushups, Pullups" } },
-                { step: { en: "3. Clear Online CEE (Common Entrance Exam)" } },
-                { step: { en: "4. Pass Physical Fitness & Medical Test" } },
-                { step: { en: "5. Join as Agniveer" } }
-            ]
+            roadmap: [{ step: { en: "1. Physical Prep -> Online CEE -> Medical" } }]
         },
         {
-            id: "e_police",
+            id: "e_police_constable",
             type: "exam",
             category: "after_10th",
             allow_all: true,
-            title: { en: "State Police Constable", hi: "राज्य पुलिस कांस्टेबल", kn: "ರಾಜ್ಯ ಪೊಲೀಸ್ ಕಾನ್ಸ್ಟೇಬಲ್" },
-            description: { en: "Recruitment for Constable rank in state police departments.", hi: "राज्य पुलिस विभागों में कांस्टेबल पद के लिए भर्ती।", kn: "ರಾಜ್ಯ ಪೊಲೀಸ್ ಇಲಾಖೆಗಳಲ್ಲಿ ಕಾನ್ಸ್ಟೇಬಲ್ ಹುದ್ದೆಗೆ ನೇಮಕಾತಿ." },
+            title: { en: "State Police Constable", hi: "राज्य पुलिस", kn: "ರಾಜ್ಯ ಪೊಲೀಸ್" },
+            description: { en: "Recruitment for Constable rank in state police departments.", hi: "राज्य पुलिस में कांस्टेबल।", kn: "ರಾಜ್ಯ ಪೊಲೀಸ್." },
             weights: { physical: 2, govt: 3, arts: 1 },
             details: {
-                eligibility: { en: "10th/12th Pass depending on state" },
-                age_limit: { en: "18 to 25 Years (varies)" },
+                eligibility: { en: "10th/12th Pass" },
+                age_limit: { en: "18 to 25 Years" },
                 difficulty: { en: "Moderate" },
                 prep_time: { en: "6 - 10 Months" },
-                salary: { en: "₹21,700 - 69,100 / month (Level 3)" }
+                salary: { en: "Level 3 Pay" }
             },
-            roadmap: [
-                { step: { en: "1. Meet Physical Measurement standards" } },
-                { step: { en: "2. Clear Written Exam (GK, Reasoning, Math)" } },
-                { step: { en: "3. Pass Physical Endurance Test (Race)" } },
-                { step: { en: "4. Medical Exam & Document Verification" } }
-            ]
+            roadmap: [{ step: { en: "1. Written -> Physical Test" } }]
         },
         {
-            id: "e_nda",
+            id: "e_upsc_nda",
             type: "exam",
-            category: "puc_science",
-            title: { en: "NDA (National Defence Academy)", hi: "एनडीए (राष्ट्रीय रक्षा अकादमी)", kn: "ಎನ್‌ಡಿಎ (ರಾಷ್ಟ್ರೀಯ ರಕ್ಷಣಾ ಅಕಾಡೆಮಿ)" },
-            description: { en: "Officer level entry to Army, Navy, and Air Force.", hi: "सेना, नौसेना और वायु सेना में अधिकारी स्तर पर प्रवेश।", kn: "ಸೇನೆ, ನೌಕಾಪಡೆ ಮತ್ತು ವಾಯುಪಡೆಗೆ ಅಧಿಕಾರಿ ಮಟ್ಟದ ಪ್ರವೇಶ." },
+            category: "puc_science_pcmc",
+            allow_all: true,
+            title: { en: "NDA (National Defence Academy)", hi: "एनडीए", kn: "ಎನ್‌ಡಿಎ" },
+            description: { en: "Officer level entry to Army, Navy, and Air Force.", hi: "अधिकारी स्तर प्रवेश।", kn: "ಅಧಿಕಾರಿ ಪ್ರವೇಶ." },
             weights: { math_sci: 2, physical: 2, govt: 3 },
             details: {
                 eligibility: { en: "12th Pass (PCM required for AirForce/Navy)" },
                 age_limit: { en: "16.5 to 19.5 Years" },
                 difficulty: { en: "High" },
                 prep_time: { en: "1 - 2 Years" },
-                salary: { en: "Stipend during training, approx ₹56,100 starting post-training" }
+                salary: { en: "Stipend, starting approx ₹56,100" }
             },
-            roadmap: [
-                { step: { en: "1. Pass 12th Board Exams (PCM)" } },
-                { step: { en: "2. Clear NDA Written Exam (UPSC)" } },
-                { step: { en: "3. Clear 5-Day SSB Interview (Psychological, Group tasks)" } },
-                { step: { en: "4. Pass Medicals & Merit List" } }
-            ]
+            roadmap: [{ step: { en: "1. Written -> SSB Interview -> Medicals" } }]
         },
         {
             id: "e_ssc_chsl",
             type: "exam",
             category: "puc_commerce",
             allow_all: true,
-            title: { en: "SSC CHSL (Clerk/Data Entry)", hi: "कर्मचारी चयन आयोग - सीएचएसएल", kn: "SSC CHSL (ಕ್ಲರ್ಕ್)" },
-            description: { en: "Staff Selection Commission Combined Higher Secondary Level Exam for central govt ministries.", hi: "केंद्रीय सरकारी मंत्रालयों के लिए क्लर्क भर्ती।", kn: "ಕೇಂದ್ರ ಸರ್ಕಾರಿ ಸಚಿವಾಲಯಗಳಿಗೆ ಕ್ಲರ್ಕ್ ನೇಮಕಾತಿ." },
+            title: { en: "SSC CHSL (Clerk/Data Entry)", hi: "सीएचएसएल", kn: "SSC CHSL" },
+            description: { en: "Central Govt ministry clerk recruitment.", hi: "क्लर्क भर्ती।", kn: "ಕ್ಲರ್ಕ್ ನೇಮಕಾತಿ." },
             weights: { theory: 2, govt: 3, commerce: 1, arts: 1 },
             details: {
-                eligibility: { en: "12th Pass (Any Stream)" },
+                eligibility: { en: "12th Pass" },
                 age_limit: { en: "18 to 27 Years" },
-                difficulty: { en: "Moderate - High Competition" },
+                difficulty: { en: "Moderate-High Competition" },
                 prep_time: { en: "8 - 12 Months" },
-                salary: { en: "₹19,900 - 81,100 / month (Level 2/4)" }
+                salary: { en: "Level 2/4" }
             },
-            roadmap: [
-                { step: { en: "1. Pass 12th Class" } },
-                { step: { en: "2. Clear Tier-1 (Computer Based Test)" } },
-                { step: { en: "3. Clear Tier-2 (Objective + Typing Test)" } },
-            ]
+            roadmap: [{ step: { en: "1. Tier-1 -> Tier-2 Typing Test" } }]
         },
         {
             id: "e_neet",
             type: "exam",
             category: "puc_science_pcmb",
-            title: { en: "NEET UG (Medical Entrance)", hi: "नीट यूजी (मेडिकल प्रवेश)", kn: "ನೀಟ್ ಯುಜಿ (ವೈದ್ಯಕೀಯ ಪ್ರವೇಶ)" },
-            description: { en: "National level medical entrance exam for MBBS/BDS.", hi: "एमबीबीएस/बीडीएस के लिए राष्ट्रीय स्तर की मेडिकल प्रवेश परीक्षा।", kn: "ಎಂಬಿಬಿಎಸ್/ಬಿಡಿಎಸ್ ಗಾಗಿ ರಾಷ್ಟ್ರೀಯ ಮಟ್ಟದ ವೈದ್ಯಕೀಯ ಪ್ರವೇಶ ಪರೀಕ್ಷೆ." },
+            title: { en: "NEET UG (Medical Entrance)", hi: "नीट यूजी", kn: "ನೀಟ್ ಯುಜಿ" },
+            description: { en: "National level medical entrance exam.", hi: "मेडिकल प्रवेश।", kn: "ವೈದ್ಯಕೀಯ ಪ್ರವೇಶ." },
             weights: { math_sci: 3, theory: 2, govt: 1 },
             details: {
-                eligibility: { en: "12th Pass with Physics, Chemistry, Biology" },
-                age_limit: { en: "17+ Years" },
+                eligibility: { en: "12th Pass with PCB" },
                 difficulty: { en: "Very High" },
-                prep_time: { en: "1 - 2 Years" },
-                salary: { en: "Depends on placement/practice" }
+                salary: { en: "Medical degrees leading to Doctor" },
+                prep_time: { en: "2 Years" },
+                age_limit: { en: "17+ Years" }
             },
-            roadmap: [
-                { step: { en: "1. Pass 12th Board Exams (PCB)" } },
-                { step: { en: "2. Prepare & Clear NEET UG" } },
-                { step: { en: "3. Attend Counseling for College Allotment" } }
-            ]
-        },
-        {
-            id: "e_kcet",
-            type: "exam",
-            category: "puc_science",
-            title: { en: "KCET (Karnataka State Entrance)", hi: "केसीईटी (कर्नाटक राज्य प्रवेश)", kn: "ಕೆಸಿಇಟಿ (ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪ್ರವೇಶ)" },
-            description: { en: "State level entrance exam for Engineering, Pharmacy, and Agriculture.", hi: "इंजीनियरिंग, फार्मेसी और कृषि के लिए राज्य स्तरीय प्रवेश परीक्षा।", kn: "ಎಂಜಿನಿಯರಿಂಗ್, ಫಾರ್ಮಸಿ ಮತ್ತು ಕೃಷಿಗಾಗಿ ರಾಜ್ಯ ಮಟ್ಟದ ಪ್ರವೇಶ ಪರೀಕ್ಷೆ." },
-            weights: { math_sci: 3, practical: 2, theory: 1 },
-            details: {
-                eligibility: { en: "12th Pass (PUC) with PCM / PCB" },
-                age_limit: { en: "No upper age limit" },
-                difficulty: { en: "High" },
-                prep_time: { en: "1 Year" },
-                salary: { en: "Depends on degree pursued" }
-            },
-            roadmap: [
-                { step: { en: "1. Pass 2nd PUC Exams" } },
-                { step: { en: "2. Clear KCET" } },
-                { step: { en: "3. State counseling for college admission" } }
-            ]
+            roadmap: [{ step: { en: "1. Subject preparation -> NEET Exam -> Counselling" } }]
         }
     ],
 
-    // Government Exam Updates Data (KCET, NEET, etc.)
     examUpdates: [
         {
             id: "update_kcet",

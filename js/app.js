@@ -140,22 +140,22 @@ function initApp() {
 
             if (AppState.isAuthenticated) {
                 renderScreen('welcome');
-            } else if (hash === '#/create-account') {
-                renderScreen('signup');
-            } else {
-                // Default to login and sync hash
-                if (hash !== '#/login') window.location.hash = '#/login';
+            } else if (hash === '#/login') {
                 renderScreen('login');
+            } else {
+                // Default to signup and sync hash
+                if (hash !== '#/create-account') window.location.hash = '#/create-account';
+                renderScreen('signup');
             }
 
             // Listen for hash changes for back/forward navigation or manual entry
             window.addEventListener('hashchange', () => {
                 if (AppState.isAuthenticated) return;
                 const newHash = window.location.hash;
-                if (newHash === '#/create-account') {
-                    renderScreen('signup');
-                } else if (newHash === '#/login') {
+                if (newHash === '#/login') {
                     renderScreen('login');
+                } else if (newHash === '#/create-account') {
+                    renderScreen('signup');
                 }
             });
         } catch (e) {
@@ -289,17 +289,17 @@ function renderSignupScreen() {
     const isEmail = AppState.authMethod === 'email';
 
     return `
-        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+        <div class="auth-card" style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 1.25rem !important;">
+                <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem !important;">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
-                <h2 style="font-size: 1.5rem; font-weight: 600; color: #f9fafb; margin: 0 0 0.5rem 0;" data-i18n="auth_signup_title">Create Your Account</h2>
-                <p style="font-size: 0.875rem; color: #9ca3af; margin: 0;" data-i18n="auth_signup_sub">Let's personalize your guidance journey</p>
+                <h2 style="font-size: 1.5rem; font-weight: 600; color: #f9fafb; margin: 0 0 0.5rem 0 !important;" data-i18n="auth_signup_title">Create Your Account</h2>
+                <p style="font-size: 0.875rem; color: #9ca3af; margin: 0 !important;" data-i18n="auth_signup_sub">Let's personalize your guidance journey</p>
             </div>
 
             <!-- Full Name Input -->
-            <div style="margin-bottom: 1.5rem; position: relative;">
+            <div style="margin-bottom: 0.25rem !important; position: relative;">
                 <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
@@ -310,59 +310,88 @@ function renderSignupScreen() {
                        data-i18n-placeholder="auth_name_placeholder"
                        value="${AppState.userName || ''}"
                        style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: #f9fafb; font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
-                <div id="signup-name-error" class="error-text" data-i18n="auth_name_error" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none;">Please enter your full name.</div>
+                <div id="signup-name-success-icon" style="position: absolute; right: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #10b981; display: none; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+            </div>
+            <div id="signup-name-error" class="error-text" data-i18n="auth_name_error" style="display: block; color: #ef4444; font-size: 0.75rem; margin-top: 0 !important; margin-bottom: 0 !important; min-height: 1.25rem !important; visibility: hidden; line-height: 1.25rem !important;">Please enter your full name.</div>
+            <div id="signup-name-success" class="success-text" data-i18n="auth_name_success" style="margin-top: 0 !important; margin-bottom: 0 !important; min-height: 1.25rem !important; line-height: 1.25rem !important;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Looks good
             </div>
 
             <!-- Gender Selection -->
-            <div style="margin-bottom: 1.5rem;">
-                <p style="font-size: 0.875rem; font-weight: 500; color: #e2e8f0; margin: 0 0 0.75rem 0.25rem;" data-i18n="auth_gender_label">Select Your Gender</p>
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="gender-pill ${AppState.userGender === 'Male' ? 'active' : ''}" data-gender="Male" style="flex: 1; min-height: 80px; padding: 1rem 0.5rem; justify-content: center; flex-direction: row; align-items: center;">
-                            <svg class="gender-icon" style="color: #3b82f6; width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="14" y1="10" x2="21" y2="3"></line><line x1="16" y1="3" x2="21" y2="3"></line><line x1="21" y1="3" x2="21" y2="8"></line></svg>
+            <div style="margin-bottom: 0.25rem !important;">
+                <p style="font-size: 0.875rem; font-weight: 500; color: #e2e8f0; margin: 0 0 0.25rem 0.25rem !important;" data-i18n="auth_gender_label">Select Your Gender</p>
+                <div style="display: flex; flex-direction: column; gap: 0.375rem !important;">
+                    <div style="display: flex; gap: 0.375rem !important;">
+                        <button class="gender-pill ${AppState.userGender === 'Male' ? 'active' : ''}" data-gender="Male" style="flex: 1; min-height: 50px; padding: 0.5rem 0.5rem; justify-content: center; flex-direction: row; align-items: center;">
+                            <svg class="gender-icon" style="color: #3b82f6; width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="14" y1="10" x2="21" y2="3"></line><line x1="16" y1="3" x2="21" y2="3"></line><line x1="21" y1="3" x2="21" y2="8"></line></svg>
                             <span data-i18n="gender_male">Male</span>
                         </button>
-                        <button class="gender-pill ${AppState.userGender === 'Female' ? 'active' : ''}" data-gender="Female" style="flex: 1; min-height: 80px; padding: 1rem 0.5rem; justify-content: center; flex-direction: row; align-items: center;">
-                            <svg class="gender-icon" style="color: #a855f7; width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="5"></circle><line x1="12" y1="15" x2="12" y2="22"></line><line x1="9" y1="19" x2="15" y2="19"></line></svg>
+                        <button class="gender-pill ${AppState.userGender === 'Female' ? 'active' : ''}" data-gender="Female" style="flex: 1; min-height: 50px; padding: 0.5rem 0.5rem; justify-content: center; flex-direction: row; align-items: center;">
+                            <svg class="gender-icon" style="color: #a855f7; width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="5"></circle><line x1="12" y1="15" x2="12" y2="22"></line><line x1="9" y1="19" x2="15" y2="19"></line></svg>
                             <span data-i18n="gender_female">Female</span>
                         </button>
                     </div>
                     <div style="display: flex; justify-content: center;">
-                        <button class="gender-pill ${AppState.userGender === 'Other' ? 'active' : ''}" data-gender="Other" style="width: 100%; min-height: 50px; padding: 0.75rem; justify-content: center; flex-direction: row; align-items: center;">
-                            <svg class="gender-icon" style="color: #9ca3af; width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <button class="gender-pill ${AppState.userGender === 'Other' ? 'active' : ''}" data-gender="Other" style="width: auto; min-height: 50px; padding: 0.5rem 1.5rem; justify-content: center; flex-direction: row; align-items: center;">
+                            <svg class="gender-icon" style="color: #9ca3af; width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                             <span data-i18n="gender_prefer_not_to_say">Prefer not to say</span>
                         </button>
                     </div>
-                </div>
-                <div id="signup-gender-error" class="error-text" data-i18n="auth_gender_error" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none;">Please select a gender to continue.</div>
+                </div> <!-- Closing the column flex gap -->
+            </div> <!-- Closing the entire Gender block -->
+            <div id="signup-gender-error" class="error-text" data-i18n="auth_gender_error" style="display: block; color: #ef4444; font-size: 0.75rem; margin-top: 0 !important; margin-bottom: 0 !important; min-height: 1.25rem !important; visibility: hidden; line-height: 1.25rem !important;">Please select a gender to continue.</div>
+            <div id="signup-gender-success" class="success-text" data-i18n="auth_gender_success" style="margin-top: 0 !important; margin-bottom: 0 !important; min-height: 1.25rem !important; line-height: 1.25rem !important;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Looks good
             </div>
 
-            <!-- Email Input (Force Email Method) -->
-            <div style="margin-bottom: 2rem; position: relative;">
-                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <!-- Login Method Toggle (Strictly between Gender and Input) -->
+            <div style="margin-bottom: 0.75rem !important;" id="signup-method-toggle-container">
+                <div style="display: flex; background: #0f172a; border-radius: 12px; padding: 0.25rem;">
+                    <div class="segment-btn ${isEmail ? 'active' : ''}" data-method="email" data-i18n="login_tab_email" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${isEmail ? '#8b5cf6' : '#9ca3af'}; background: ${isEmail ? '#1e293b' : 'transparent'}; box-shadow: ${isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Email</div>
+                    <div class="segment-btn ${!isEmail ? 'active' : ''}" data-method="mobile" data-i18n="login_tab_mobile" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${!isEmail ? '#8b5cf6' : '#9ca3af'}; background: ${!isEmail ? '#1e293b' : 'transparent'}; box-shadow: ${!isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Mobile Number</div>
                 </div>
-                <input type="email" 
+            </div>
+
+            <!-- Email/Mobile Input -->
+            <div style="margin-bottom: 0.25rem !important; position: relative;">
+                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center;">
+                    ${isEmail ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>'}
+                </div>
+                <!-- Dynamic type and placeholder based on Auth Method -->
+                <input type="${isEmail ? 'email' : 'tel'}" 
                        id="signup-input" 
                        class="auth-minimal-input" 
-                       placeholder="Enter your email address"
-                       data-i18n-placeholder="login_input_email"
+                       placeholder="Enter your ${isEmail ? 'email address' : 'mobile number'}"
+                       data-i18n-placeholder="${isEmail ? 'login_input_email' : 'login_input_mobile'}"
                        value="${AppState.authValue}"
                        style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: #f9fafb; font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
-                <div id="signup-error" class="error-text" data-i18n="login_error_email" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none;">
-                    Enter a valid email address.
+                <div id="signup-contact-success-icon" style="position: absolute; right: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #10b981; display: none; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
+            </div>
+            <div id="signup-error" class="error-text" data-i18n="${isEmail ? 'login_error_email' : 'login_error_mobile'}" style="display: block; color: #ef4444; font-size: 0.75rem; margin-top: 0 !important; margin-bottom: 0 !important; min-height: 1.25rem !important; visibility: hidden; line-height: 1.25rem !important;">
+                ${isEmail ? 'Enter a valid email address.' : 'Enter a valid mobile number.'}
+            </div>
+            <div id="signup-success" class="success-text" data-i18n="auth_contact_success" style="margin-top: 0 !important; margin-bottom: 0 !important; min-height: 1.25rem !important; line-height: 1.25rem !important;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Looks good
             </div>
 
             <div id="recaptcha-wrapper"></div>
             
-            <button id="btn-signup" disabled 
-                    style="width: 100%; padding: 0.875rem; border-radius: 12px; border: none; background: #6366f1; color: white; font-size: 1rem; font-weight: 500; cursor: not-allowed; opacity: 0.5; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2); font-family: var(--font-family);"
-                    data-i18n="signup_btn">
-                Create Account & Send OTP
-            </button>
+            <div id="signup-btn-wrapper" style="cursor: pointer; width: 100%;">
+                <button id="btn-signup" disabled 
+                        style="width: 100%; padding: 0.875rem; border-radius: 12px; border: none; background: #6366f1; color: white; font-size: 1rem; font-weight: 500; cursor: not-allowed; opacity: 0.5; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2); font-family: var(--font-family); pointer-events: none;"
+                        data-i18n="signup_btn">
+                    Create Account & Send OTP
+                </button>
+            </div>
             
-            <div style="text-align: center; margin-top: 1.5rem;">
+            <div style="text-align: center; margin-top: 1.5rem !important;">
                 <button id="btn-switch-to-login" data-target="login" style="background: transparent; border: none; font-size: 0.875rem; cursor: pointer; padding: 0;">
                     <span style="color: #9ca3af;" data-i18n="auth_switch_prompt_signin">Already have an account? </span>
                     <span style="color: #c4b5fd; font-weight: 500;" data-i18n="auth_switch_action_signin">Sign In</span>
@@ -376,21 +405,21 @@ function renderLoginScreen() {
     const isEmail = AppState.authMethod === 'email';
 
     return `
-        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 1.25rem;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 1rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <h2 style="font-size: 1.25rem; font-weight: 600; color: #f9fafb; margin: 0 0 0.25rem 0;" data-i18n="auth_signin_title">Welcome Back</h2>
                 <p style="font-size: 0.875rem; color: #9ca3af; margin: 0;" data-i18n="auth_signin_sub">Welcome back! Sign in to continue your journey.</p>
             </div>
 
-            <div style="margin-bottom: 1.5rem;">
+            <div style="margin-bottom: 0.75rem;">
                 <div style="display: flex; background: #0f172a; border-radius: 12px; padding: 0.25rem;">
                     <div class="segment-btn ${isEmail ? 'active' : ''}" data-method="email" data-i18n="login_tab_email" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${isEmail ? '#8b5cf6' : '#9ca3af'}; background: ${isEmail ? '#1e293b' : 'transparent'}; box-shadow: ${isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Email</div>
                     <div class="segment-btn ${!isEmail ? 'active' : ''}" data-method="mobile" data-i18n="login_tab_mobile" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${!isEmail ? '#8b5cf6' : '#9ca3af'}; background: ${!isEmail ? '#1e293b' : 'transparent'}; box-shadow: ${!isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Mobile Number</div>
                 </div>
             </div>
 
-            <div style="margin-bottom: 2rem; position: relative;">
+            <div style="margin-bottom: 0.5rem; position: relative;">
                 <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center;">
                     ${isEmail ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>'}
                 </div>
@@ -401,7 +430,7 @@ function renderLoginScreen() {
                        data-i18n-placeholder="${isEmail ? 'login_input_email' : 'login_input_mobile'}"
                        value="${AppState.authValue}"
                        style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid ${AppState.authError ? '#ef4444' : '#334155'}; background: #0f172a; color: #f9fafb; font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
-                <div id="login-error" class="error-text ${AppState.authError ? 'show' : ''}" data-i18n="${isEmail ? 'login_error_email' : 'login_error_mobile'}" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: ${AppState.authError ? 'block' : 'none'};">
+                <div id="login-error" class="error-text ${AppState.authError ? 'show' : ''}" data-i18n="${isEmail ? 'login_error_email' : 'login_error_mobile'}" style="color: #ef4444; font-size: 0.75rem; margin-top: 0; min-height: 1.25rem; display: ${AppState.authError ? 'block' : 'none'};">
                     ${isEmail ? 'Please enter a valid email address.' : 'Please enter a valid 10-digit mobile number.'}
                 </div>
             </div>
@@ -413,7 +442,7 @@ function renderLoginScreen() {
             </button>
             <p id="login-disabled-hint" style="font-size: 0.7rem; color: #6b7280; margin: 0.5rem 0 0 0; text-align: center;">Enter your details to continue.</p>
 
-            <div style="text-align: center; margin-top: 2rem;">
+            <div style="text-align: center; margin-top: 1.5rem;">
                 <button id="btn-switch-to-signup" data-target="signup" style="background: transparent; border: none; font-size: 0.875rem; cursor: pointer; padding: 0;">
                     <span style="color: #9ca3af;" data-i18n="auth_switch_prompt_signup">New here? </span>
                     <span style="color: #4f46e5; font-weight: 500;" data-i18n="auth_switch_action_signup">Create Account</span>
@@ -425,14 +454,14 @@ function renderLoginScreen() {
 
 function renderOtpScreen() {
     return `
-        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 1rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 1.25rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 0.75rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <h2 style="font-size: 1.25rem; font-weight: 600; color: #f9fafb; margin: 0 0 0.25rem 0;" data-i18n="otp_title">Verify Secure OTP</h2>
                 <p style="font-size: 0.875rem; color: #9ca3af; margin: 0;" data-i18n="otp_sub">Please enter the 4-digit verification code</p>
             </div>
 
-            <div style="margin-bottom: 1.5rem;">
+            <div style="margin-bottom: 1rem;">
                 <input type="text" 
                        id="otp-input" 
                        style="width: 100%; text-align: center; font-size: 1.25rem; letter-spacing: 0.5em; padding: 0.75rem; border-radius: 6px; border: 1px solid #374151; background: #0f172a; color: #f9fafb; outline: none;"
@@ -457,29 +486,29 @@ function renderOtpScreen() {
 function renderWelcomeScreen() {
     const name = AppState.userName ? AppState.userName : 'Student';
     const hour = new Date().getHours();
-    let greetingKey = 'greeting_morning';
-    let defaultGreeting = 'Good morning';
+    let defaultGreeting = 'Good Morning';
 
     if (hour >= 12 && hour < 17) {
-        greetingKey = 'greeting_afternoon';
-        defaultGreeting = 'Good afternoon';
-    } else if (hour >= 17) {
-        greetingKey = 'greeting_evening';
-        defaultGreeting = 'Good evening';
+        defaultGreeting = 'Good Afternoon';
+    } else if (hour >= 17 && hour < 22) {
+        defaultGreeting = 'Good Evening';
+    } else if (hour >= 22 || hour < 5) {
+        defaultGreeting = 'Welcome';
     }
 
+    const greetingText = `${defaultGreeting}, ${name} 👋`;
+
     return `
-        <div class="glass-card text-center" style="max-width: 600px; margin: 4rem auto; text-align: center;">
-            <h2 class="screen-title" style="margin-bottom: 0.5rem;" data-i18n="welcome_user">Welcome ${name}</h2>
-            <h3 class="screen-sub" style="font-size: 1.25rem; font-weight: 500; color: var(--primary-color); margin-bottom: 1.5rem;" data-i18n="${greetingKey}">${defaultGreeting}</h3>
-            <h2 class="screen-title" data-i18n="welcome_title">Discover Your True Path</h2>
-            <p class="screen-sub" data-i18n="welcome_subtitle">We guide you to the correct courses and government exams based on your unique interests and abilities. No confusion, just clarity.</p>
+        <div class="glass-card text-center" style="max-width: 600px; margin: 4rem auto; text-align: center; padding: 3rem 2rem;">
+            <div style="width: 80px; height: 80px; margin: 0 auto 1.5rem auto; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
             
-            <button id="btn-start" class="btn btn-primary" style="margin-top: 1.5rem; font-size: 1.125rem;">
-                <span data-i18n="btn_get_started">Get Started</span>
-            </button>
-            <button id="btn-view-updates" class="btn btn-secondary" style="margin-top: 1rem; width: 100%; font-size: 1rem;">
-                <span data-i18n="btn_view_exam_updates">View Exam Updates</span>
+            <h2 class="screen-title" style="margin-bottom: 1rem; font-size: 2rem; color: #f9fafb;">${greetingText}</h2>
+            <p class="screen-sub" style="font-size: 1.125rem; color: #9ca3af; margin-bottom: 2.5rem;">We’re glad to have you here. Let’s plan your future.</p>
+            
+            <button id="btn-start" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem; width: 100%; max-width: 300px; margin: 0 auto; display: flex; justify-content: center;">
+                <span>Start My Guidance</span>
             </button>
         </div>
     `;
@@ -564,34 +593,57 @@ function renderLevelSelectScreen() {
             <p class="screen-sub" data-i18n="level_select_sub">Select the stage you are currently studying or have just completed.</p>
             
             <div class="options-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                <div class="option-card" data-level="after_10th">
+                <div class="option-card" onclick="window.handleLevelOptionClick(this)" data-level="after_10th">
                     <span data-i18n="level_10th">Class 10th</span>
                 </div>
-                <div class="option-card" data-level="puc_science_pcmb">
+                <div class="option-card" onclick="window.handleLevelOptionClick(this)" data-level="puc_science_pcmb">
                     <span data-i18n="level_science_pcmb">PUC Science (PCMB)</span>
                 </div>
-                <div class="option-card" data-level="puc_science_pcmc">
+                <div class="option-card" onclick="window.handleLevelOptionClick(this)" data-level="puc_science_pcmc">
                     <span data-i18n="level_science_pcmc">PUC Science (PCMC)</span>
                 </div>
-                <div class="option-card" data-level="puc_commerce">
+                <div class="option-card" onclick="window.handleLevelOptionClick(this)" data-level="puc_commerce">
                     <span data-i18n="level_commerce">PUC (Commerce)</span>
                 </div>
-                <div class="option-card" data-level="puc_arts">
+                <div class="option-card" onclick="window.handleLevelOptionClick(this)" data-level="puc_arts">
                     <span data-i18n="level_arts">PUC (Arts)</span>
+                </div>
+                <!-- Added Diploma & ITI -->
+                <div class="option-card" onclick="window.handleLevelOptionClick(this)" data-level="diploma_polytechnic">
+                    <span data-i18n="level_diploma">Polytechnic / Diploma</span>
+                </div>
+                <div class="option-card" onclick="window.handleLevelOptionClick(this)" data-level="iti">
+                    <span data-i18n="level_iti">ITI (Industrial Training)</span>
                 </div>
             </div>
             
             <div style="margin-top: 2rem; display: flex; justify-content: space-between;">
-                <button id="btn-back" class="btn btn-secondary">
+                <button id="btn-back" class="btn btn-secondary" onclick="renderScreen('welcome')">
                     <span data-i18n="btn_back">Back</span>
                 </button>
-                <button id="btn-next-level" class="btn btn-primary" disabled>
+                <button id="btn-next-level" class="btn btn-primary" onclick="window.handleNextLevelClick(this)" disabled>
                     <span data-i18n="btn_continue">Continue</span>
                 </button>
             </div>
         </div>
     `;
 }
+
+// Temporary Global handler for Level Selection Options since typical event listener binding is skipping execution correctly for this target layout currently.
+window.handleLevelOptionClick = (element) => {
+    const options = document.querySelectorAll('.option-card');
+    options.forEach(o => o.classList.remove('selected'));
+    element.classList.add('selected');
+    AppState.selectedLevel = element.dataset.level;
+    const nextBtn = document.getElementById('btn-next-level');
+    if (nextBtn) nextBtn.disabled = false;
+};
+
+window.handleNextLevelClick = (element) => {
+    if (!AppState.selectedLevel) return;
+    renderScreen('interest_select');
+};
+
 
 function renderInterestSelectScreen() {
     return `
@@ -640,12 +692,27 @@ function renderCalculatingScreen() {
 
 function renderResultsScreen() {
     // Note: Actual content injected by engine.js based on results
+    const userName = AppState.userName ? AppState.userName.split(' ')[0] : (AppState.user && AppState.user.name ? AppState.user.name.split(' ')[0] : 'Student');
+
     return `
-        <div id="results-container">
-            <div class="glass-card" style="margin-bottom: 2rem;">
-                <h2 class="screen-title" data-i18n="results_title">Your Personalized Recommendations</h2>
-                <p class="screen-sub" data-i18n="results_sub">Based on your answers, these options suit you best.</p>
+        <div id="results-container" style="max-width: 1000px; margin: 0 auto; padding: 1rem;">
+            <!-- New Header Section -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 500; color: var(--text-main); margin: 0;">Hello, ${userName} 👋</h3>
+                <button onclick="window.editAllAnswers()" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    <span data-i18n="btn_edit_answers">Edit Answers</span>
+                </button>
             </div>
+
+            <div class="glass-card" style="margin-bottom: 2rem; border-top: 4px solid var(--primary-color);">
+                <h2 class="screen-title" data-i18n="results_title" style="margin-bottom: 0.5rem;">Your Personalized Recommendations</h2>
+                <p class="screen-sub" data-i18n="results_sub" style="margin-bottom: 0;">Based on your answers, these options suit you best.</p>
+            </div>
+
+            <div id="answers-review-list" style="margin-bottom: 2rem;">
+                <!-- Answers injected via engine.js -->
+            </div>
+
             <div id="results-lists">
                 <!-- Injected via engine.js -->
             </div>
@@ -750,6 +817,10 @@ function attachScreenListeners(screenName) {
             }
         }
 
+        if (!AppState.touched) {
+            AppState.touched = { name: false, gender: false, contact: false };
+        }
+
         const checkFormValidity = () => {
             let isValid = true;
 
@@ -758,55 +829,110 @@ function attachScreenListeners(screenName) {
             const genderErr = document.getElementById('signup-gender-error');
             const emailErr = document.getElementById(isSignup ? 'signup-error' : 'login-error');
 
+            // Success targets
+            let nameSuccessIcon, nameSuccess, genderSuccess, contactSuccessIcon, contactSuccess;
+            if (isSignup) {
+                nameSuccessIcon = document.getElementById('signup-name-success-icon');
+                nameSuccess = document.getElementById('signup-name-success');
+                genderSuccess = document.getElementById('signup-gender-success');
+                contactSuccessIcon = document.getElementById('signup-contact-success-icon');
+                contactSuccess = document.getElementById('signup-success');
+            }
+
             if (isSignup) {
                 // Name Check
+                let nameValid = false;
                 if (nameInput) {
-                    if (AppState.userName && AppState.userName.trim().length > 0) {
-                        nameInput.style.borderColor = '#334155';
-                        if (nameErr) nameErr.style.display = 'none';
+                    nameValid = AppState.userName && AppState.userName.trim().length > 0;
+                    if (nameValid) {
+                        nameInput.classList.add('valid-input');
+                        if (nameErr) { nameErr.style.display = 'none'; nameErr.style.visibility = 'hidden'; }
+                        if (nameSuccess) nameSuccess.classList.add('show');
+                        if (nameSuccessIcon) nameSuccessIcon.style.display = 'flex';
+                    } else if (AppState.touched.name) {
+                        nameInput.classList.remove('valid-input');
+                        nameInput.style.borderColor = '#334155'; // Keep neutral
+                        if (nameErr) { nameErr.style.display = 'block'; nameErr.style.visibility = 'visible'; }
+                        if (nameSuccess) nameSuccess.classList.remove('show');
+                        if (nameSuccessIcon) nameSuccessIcon.style.display = 'none';
                     } else {
-                        isValid = false;
-                        nameInput.style.borderColor = '#ef4444';
-                        if (nameErr) nameErr.style.display = 'block';
+                        // Keep neutral if not touched
+                        nameInput.classList.remove('valid-input');
+                        nameInput.style.borderColor = '#334155';
+                        if (nameErr) { nameErr.style.display = 'block'; nameErr.style.visibility = 'hidden'; }
+                        if (nameSuccess) nameSuccess.classList.remove('show');
+                        if (nameSuccessIcon) nameSuccessIcon.style.display = 'none';
                     }
+                    if (!nameValid) isValid = false;
                 }
 
                 // Gender Check
-                if (AppState.userGender) {
-                    if (genderErr) genderErr.style.display = 'none';
-                } else {
-                    isValid = false;
-                    if (genderErr) genderErr.style.display = 'block';
+                if (genderBtns.length > 0) {
+                    let genderValid = !!AppState.userGender;
+                    if (genderValid) {
+                        if (genderErr) { genderErr.style.display = 'none'; genderErr.style.visibility = 'hidden'; }
+                        if (genderSuccess) genderSuccess.classList.add('show');
+                    } else if (AppState.touched.gender) {
+                        if (genderErr) { genderErr.style.display = 'block'; genderErr.style.visibility = 'visible'; }
+                        if (genderSuccess) genderSuccess.classList.remove('show');
+                    } else {
+                        if (genderErr) { genderErr.style.display = 'block'; genderErr.style.visibility = 'hidden'; }
+                        if (genderSuccess) genderSuccess.classList.remove('show');
+                    }
+                    if (!genderValid) isValid = false;
                 }
             }
 
-            // Email Check (Strictly enforced on Signup)
+            // Email/Mobile Check
             if (input) {
                 const val = (input.value || '').trim();
                 let fieldValid = false;
 
-                // For login screen it might be mobile still based on tabs
-                if (!isSignup && AppState.authMethod === 'mobile') {
+                if (AppState.authMethod === 'mobile') {
                     fieldValid = /^\d{10}$/.test(val);
                 } else {
                     fieldValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
                 }
 
+                if (!fieldValid) isValid = false;
+
                 if (fieldValid) {
                     input.classList.remove('error-input');
-                    input.style.borderColor = '#334155';
-                    if (emailErr) emailErr.style.display = 'none';
-                } else {
-                    isValid = false;
-                    // Only show red border if not empty (user is typing/has tested)
-                    if (val.length > 0) {
-                        input.classList.add('error-input');
-                        input.style.borderColor = '#ef4444';
-                        if (emailErr) emailErr.style.display = 'block';
+                    input.classList.add('valid-input');
+                    if (isSignup) {
+                        if (emailErr) { emailErr.style.display = 'none'; emailErr.style.visibility = 'hidden'; }
+                        if (contactSuccess) contactSuccess.classList.add('show');
+                        if (contactSuccessIcon) contactSuccessIcon.style.display = 'flex';
                     } else {
-                        input.classList.remove('error-input');
                         input.style.borderColor = '#334155';
                         if (emailErr) emailErr.style.display = 'none';
+                    }
+                } else {
+                    input.classList.remove('valid-input');
+                    if (isSignup) {
+                        if (contactSuccess) contactSuccess.classList.remove('show');
+                        if (contactSuccessIcon) contactSuccessIcon.style.display = 'none';
+
+                        if (AppState.touched.contact) {
+                            input.classList.remove('error-input');
+                            input.style.borderColor = '#334155'; // Keep neutral
+                            if (emailErr) { emailErr.style.display = 'block'; emailErr.style.visibility = 'visible'; }
+                        } else {
+                            input.classList.remove('error-input');
+                            input.style.borderColor = '#334155';
+                            if (emailErr) { emailErr.style.display = 'block'; emailErr.style.visibility = 'hidden'; }
+                        }
+                    } else {
+                        // Original Login logic
+                        if (val.length > 0) {
+                            input.classList.add('error-input');
+                            input.style.borderColor = '#ef4444';
+                            if (emailErr) emailErr.style.display = 'block';
+                        } else {
+                            input.classList.remove('error-input');
+                            input.style.borderColor = '#334155';
+                            if (emailErr) emailErr.style.display = 'none';
+                        }
                     }
                 }
             }
@@ -816,10 +942,18 @@ function attachScreenListeners(screenName) {
                     sendBtn.removeAttribute('disabled');
                     sendBtn.style.opacity = '1';
                     sendBtn.style.cursor = 'pointer';
+                    if (isSignup) {
+                        sendBtn.style.pointerEvents = 'auto';
+                        sendBtn.classList.add('btn-ready');
+                    }
                 } else {
                     sendBtn.setAttribute('disabled', 'true');
                     sendBtn.style.opacity = '0.5';
                     sendBtn.style.cursor = 'not-allowed';
+                    if (isSignup) {
+                        sendBtn.style.pointerEvents = 'none';
+                        sendBtn.classList.remove('btn-ready');
+                    }
                 }
             }
         };
@@ -830,6 +964,7 @@ function attachScreenListeners(screenName) {
                 checkFormValidity();
             });
             input.addEventListener('blur', () => {
+                if (isSignup) AppState.touched.contact = true;
                 checkFormValidity();
             });
         }
@@ -840,6 +975,7 @@ function attachScreenListeners(screenName) {
                 checkFormValidity();
             });
             nameInput.addEventListener('blur', () => {
+                if (isSignup) AppState.touched.name = true;
                 checkFormValidity();
             });
 
@@ -858,6 +994,12 @@ function attachScreenListeners(screenName) {
                 AppState.authValue = input ? input.value : '';
                 AppState.authError = false;
                 renderScreen(screenName);
+
+                // Auto-focus the contact input when switching methods (mostly for signup)
+                setTimeout(() => {
+                    const newInput = document.getElementById(`${prefix}-input`);
+                    if (newInput) newInput.focus();
+                }, 50);
             });
         });
 
@@ -877,13 +1019,33 @@ function attachScreenListeners(screenName) {
                     // Style selected
                     pill.classList.add('active');
 
+                    AppState.touched.gender = true;
                     checkFormValidity();
 
-                    // Shift focus to email input immediately
-                    if (input) {
-                        input.focus();
+                    // Shift focus to the toggle block instead of the input immediately 
+                    // so the user knows they have a choice
+                    const toggleContainer = document.getElementById('signup-method-toggle-container');
+                    if (toggleContainer) {
+                        const activeTab = toggleContainer.querySelector('.segment-btn.active');
+                        if (activeTab) {
+                            // Make it focusable to guide keyboard users
+                            activeTab.setAttribute('tabindex', '0');
+                            activeTab.focus();
+                        }
                     }
                 });
+            });
+        }
+
+        const btnWrapper = document.getElementById('signup-btn-wrapper');
+        if (btnWrapper && isSignup) {
+            btnWrapper.addEventListener('click', () => {
+                if (sendBtn && sendBtn.hasAttribute('disabled')) {
+                    AppState.touched.name = true;
+                    AppState.touched.gender = true;
+                    AppState.touched.contact = true;
+                    checkFormValidity();
+                }
             });
         }
 
@@ -897,6 +1059,7 @@ function attachScreenListeners(screenName) {
                 AppState.authValue = '';
                 AppState.userName = '';
                 AppState.userGender = null;
+                AppState.touched = { name: false, gender: false, contact: false };
 
                 if (target === 'signup') {
                     window.location.hash = '#/create-account';
@@ -940,9 +1103,25 @@ function attachScreenListeners(screenName) {
             // Mock verify with code 1234
             if (val === '1234') {
                 AppState.isAuthenticated = true;
-                errorText.classList.remove('show');
-                renderScreen('welcome');
+
+                if (AppState.authType === 'signup') {
+                    // Show success state for OTP
+                    errorText.style.color = '#10b981';
+                    errorText.innerHTML = '<span style="display: flex; align-items: center; justify-content: center; gap: 0.25rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Account created successfully</span>';
+                    errorText.classList.add('show');
+
+                    // Delay transition to welcome screen
+                    setTimeout(() => {
+                        renderScreen('welcome');
+                    }, 1500);
+                } else {
+                    errorText.classList.remove('show');
+                    // For sign in, skip the Welcome screen, go to level_select
+                    renderScreen('level_select');
+                }
             } else {
+                errorText.style.color = '#ef4444';
+                errorText.textContent = "Invalid OTP. Please try '1234'.";
                 errorText.classList.add('show');
                 input.value = ''; // clear on fail
                 input.focus();
@@ -990,20 +1169,27 @@ function attachScreenListeners(screenName) {
                 card.classList.add('selected');
                 AppState.selectedLevel = card.dataset.level;
                 // Enable next button
-                nextBtn.removeAttribute('disabled');
+                if (nextBtn) {
+                    nextBtn.removeAttribute('disabled');
+                    nextBtn.classList.add('btn-glow');
+                }
             });
         });
 
-        backBtn.addEventListener('click', () => {
-            renderScreen('welcome');
-        });
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                renderScreen('welcome');
+            });
+        }
 
-        nextBtn.addEventListener('click', () => {
-            if (AppState.selectedLevel) {
-                // Go to Interest Select
-                renderScreen('interest_select');
-            }
-        });
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                if (AppState.selectedLevel) {
+                    // Go to Interest Select
+                    renderScreen('interest_select');
+                }
+            });
+        }
     }
 
     if (screenName === 'interest_select') {
@@ -1019,21 +1205,29 @@ function attachScreenListeners(screenName) {
                 card.classList.add('selected');
                 AppState.selectedInterest = card.dataset.interest;
                 // Enable next button
-                startBtn.removeAttribute('disabled');
+                if (startBtn) {
+                    startBtn.removeAttribute('disabled');
+                    startBtn.classList.add('btn-glow');
+                }
             });
         });
 
-        backBtn.addEventListener('click', () => {
-            renderScreen('level_select');
-        });
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                renderScreen('level_select');
+            });
+        }
 
-        startBtn.addEventListener('click', () => {
-            if (AppState.selectedInterest) {
-                // Begin Quiz
-                renderScreen('quiz');
-                initQuiz(); // Located in engine.js
-            }
-        });
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                if (AppState.selectedInterest) {
+                    // Begin Quiz
+                    AppState.answers = []; // Reset answers
+                    renderScreen('quiz');
+                    initQuiz(); // Located in engine.js
+                }
+            });
+        }
     }
 
     if (screenName === 'results') {
