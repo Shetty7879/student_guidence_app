@@ -74,7 +74,7 @@ const Translations = {
         login_tab_email: "Email",
         login_tab_mobile: "Mobile Number",
         login_input_email: "Enter your email address",
-        login_input_mobile: "Enter your mobile number",
+        login_input_mobile: "Enter mobile number",
         login_btn: "Send OTP",
         otp_title: "Verify Secure OTP",
         otp_sub: "Please enter the 4-digit verification code sent to you.",
@@ -396,6 +396,15 @@ function updateTranslations() {
             } else {
                 el.innerText = Translations[lang][key];
             }
+        }
+    });
+
+    // Select all elements that have a data-i18n-placeholder attribute
+    const placeholderElements = document.querySelectorAll('[data-i18n-placeholder]');
+    placeholderElements.forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (Translations[lang] && Translations[lang][key]) {
+            el.setAttribute('placeholder', Translations[lang][key]);
         }
     });
 }

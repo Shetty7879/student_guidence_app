@@ -5,6 +5,8 @@ const AppState = {
     isAuthenticated: false,
     authMethod: 'email', // email or mobile
     authType: 'signup', // signin or signup
+    countryCode: '+91', // new field
+    resendCount: 0,
     authValue: '',
     authError: false,
     userName: '',
@@ -38,7 +40,8 @@ function saveUserProfile() {
         selectedInterest: AppState.selectedInterest,
         dateJoined: AppState.dateJoined,
         language: AppState.language,
-        profilePicture: AppState.profilePicture
+        profilePicture: AppState.profilePicture,
+        userRole: AppState.userRole
     };
 
     localStorage.setItem('sg_user_profile', JSON.stringify(profileData));
@@ -56,6 +59,13 @@ function loadUserProfile() {
             AppState.selectedLevel = data.selectedLevel || null;
             AppState.selectedInterest = data.selectedInterest || null;
             AppState.dateJoined = data.dateJoined || null;
+            AppState.userRole = data.userRole || 'user';
+
+            // Hardcode secure admin check
+            if (AppState.authMethod === 'email' && AppState.authValue === 'prajwalsshetty508@gmail.com') {
+                AppState.userRole = 'admin';
+            }
+
             if (data.language) {
                 AppState.language = data.language;
                 if (DOM.langSelect) DOM.langSelect.value = data.language;
@@ -63,6 +73,9 @@ function loadUserProfile() {
             AppState.profilePicture = data.profilePicture || null;
             if (typeof window.updateNavbarAvatar === 'function') {
                 window.updateNavbarAvatar();
+            }
+            if (typeof window.updateAdminMenuVisibility === 'function') {
+                window.updateAdminMenuVisibility();
             }
         } catch (e) {
             console.error('Failed to load user profile from storage', e);
@@ -83,6 +96,17 @@ window.updateNavbarAvatar = function () {
             userAvatarImg.src = '';
             userAvatarImg.classList.add('hidden');
             defaultAvatarSvg.classList.remove('hidden');
+        }
+    }
+};
+
+window.updateAdminMenuVisibility = function () {
+    const adminMenuBtn = document.getElementById('menu-admin-panel');
+    if (adminMenuBtn) {
+        if (AppState.userRole === 'admin' || AppState.userRole === 'super_admin') {
+            adminMenuBtn.classList.remove('hidden');
+        } else {
+            adminMenuBtn.classList.add('hidden');
         }
     }
 };
@@ -289,7 +313,7 @@ function initApp() {
             const hash = window.location.hash;
 
             // Auto-login if we have a saved profile (simple for now)
-            if (AppState.userName && AppState.authValue && !AppState.isAuthenticated) {
+            if (AppState.authValue && !AppState.isAuthenticated) {
                 AppState.isAuthenticated = true;
 
                 // Re-load profile if it exists, otherwise save new one
@@ -299,10 +323,18 @@ function initApp() {
 
                 renderScreen('welcome');
             } else if (hash === '#/login') {
+                AppState.authValue = '';
+                AppState.userName = '';
+                AppState.userGender = null;
+                AppState.touched = { name: false, gender: false, contact: false };
                 renderScreen('login');
             } else {
                 // Default to signup and sync hash
                 if (hash !== '#/create-account') window.location.hash = '#/create-account';
+                AppState.authValue = '';
+                AppState.userName = '';
+                AppState.userGender = null;
+                AppState.touched = { name: false, gender: false, contact: false };
                 renderScreen('signup');
             }
 
@@ -310,6 +342,10 @@ function initApp() {
             window.addEventListener('hashchange', () => {
                 const newHash = window.location.hash;
                 if (AppState.isAuthenticated) {
+                    if (newHash === '#/login' || newHash === '#/create-account') {
+                        window.location.hash = '#/welcome';
+                        return; // hashchange will re-fire
+                    }
                     if (newHash === '#/profile') renderScreen('profile');
                     else if (newHash === '#/edit-profile') renderScreen('edit_profile');
                     else if (newHash === '#/welcome') renderScreen('welcome');
@@ -324,8 +360,16 @@ function initApp() {
                 }
 
                 if (newHash === '#/login') {
+                    AppState.authValue = '';
+                    AppState.userName = '';
+                    AppState.userGender = null;
+                    AppState.touched = { name: false, gender: false, contact: false };
                     renderScreen('login');
                 } else if (newHash === '#/create-account') {
+                    AppState.authValue = '';
+                    AppState.userName = '';
+                    AppState.userGender = null;
+                    AppState.touched = { name: false, gender: false, contact: false };
                     renderScreen('signup');
                 }
             });
@@ -489,7 +533,9 @@ function renderSignupScreen() {
     return `
         <div class="auth-card" style="width: 100%; max-width: 360px; margin: 0 auto; background: var(--card-bg); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="text-align: center; margin-bottom: 1.25rem !important;">
-                <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem !important;">
+                <h1 style="font-size: 1.75rem; font-weight: 700; margin: 0 0 12px 0; color: var(--text-main);">Guidance<span style="color: var(--primary-color);">Pro</span></h1>
+                
+                <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px !important;">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
                 <h2 style="font-size: 1.5rem; font-weight: 600; color: var(--text-main); margin: 0 0 0.5rem 0 !important;" data-i18n="auth_signup_title">Create Your Account</h2>
@@ -505,6 +551,7 @@ function renderSignupScreen() {
                        id="signup-name-input" 
                        class="auth-minimal-input" 
                        placeholder="Enter full name"
+                       autocomplete="off"
                        data-i18n-placeholder="auth_name_placeholder"
                        value="${AppState.userName || ''}"
                        style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface-solid); color: var(--text-main); font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
@@ -555,24 +602,38 @@ function renderSignupScreen() {
             </div>
 
             <!-- Email/Mobile Input -->
-            <div style="margin-bottom: 0.25rem !important; position: relative;">
-                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); display: flex; align-items: center; justify-content: center;">
-                    ${isEmail ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>'}
+            <div style="margin-bottom: 0.25rem !important; position: relative; display: flex; ${!isEmail ? 'gap: 12px;' : ''}">
+                ${isEmail ? `
+                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; z-index: 2;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                 </div>
-                <!-- Dynamic type and placeholder based on Auth Method -->
-                <input type="${isEmail ? 'email' : 'tel'}" 
-                       id="signup-input" 
-                       class="auth-minimal-input" 
-                       placeholder="Enter your ${isEmail ? 'email address' : 'mobile number'}"
-                       data-i18n-placeholder="${isEmail ? 'login_input_email' : 'login_input_mobile'}"
-                       value="${AppState.authValue}"
-                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface-solid); color: var(--text-main); font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
-                <div id="signup-contact-success-icon" style="position: absolute; right: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #10b981; display: none; align-items: center; justify-content: center;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                ` : `
+                <select id="signup-country-code" style="width: 120px; padding: 0.875rem 0.5rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface-solid); color: var(--text-main); font-size: 0.875rem; outline: none; cursor: pointer; appearance: auto;">
+                    <option value="+91" ${AppState.countryCode === '+91' ? 'selected' : ''}>🇮🇳 +91</option>
+                    <option value="+1_US" ${AppState.countryCode === '+1_US' ? 'selected' : ''}>🇺🇸 +1</option>
+                    <option value="+44" ${AppState.countryCode === '+44' ? 'selected' : ''}>🇬🇧 +44</option>
+                    <option value="+1_CA" ${AppState.countryCode === '+1_CA' ? 'selected' : ''}>🇨🇦 +1</option>
+                    <option value="+61" ${AppState.countryCode === '+61' ? 'selected' : ''}>🇦🇺 +61</option>
+                    <option value="+65" ${AppState.countryCode === '+65' ? 'selected' : ''}>🇸🇬 +65</option>
+                </select>
+                `}
+                
+                <div style="position: relative; flex: 1;">
+                    <input type="${isEmail ? 'email' : 'tel'}" 
+                           id="signup-input" 
+                           class="auth-minimal-input" 
+                           placeholder="${isEmail ? 'Enter your email address' : 'Enter mobile number'}"
+                           autocomplete="off"
+                           data-i18n-placeholder="${isEmail ? 'login_input_email' : 'login_input_mobile'}"
+                           value="${AppState.authValue}"
+                           style="width: 100%; padding: 0.875rem 1rem 0.875rem ${isEmail ? '2.75rem' : '1rem'}; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface-solid); color: var(--text-main); font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
+                    <div id="signup-contact-success-icon" style="position: absolute; right: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #10b981; display: none; align-items: center; justify-content: center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
                 </div>
             </div>
             <div id="signup-error" class="error-text" data-i18n="${isEmail ? 'login_error_email' : 'login_error_mobile'}" style="display: block; color: #ef4444; font-size: 0.75rem; margin-top: 0 !important; margin-bottom: 0 !important; min-height: 1.25rem !important; visibility: hidden; line-height: 1.25rem !important;">
-                ${isEmail ? 'Enter a valid email address.' : 'Enter a valid mobile number.'}
+                ${isEmail ? 'Enter a valid email address.' : 'Please enter a valid 10-digit mobile number.'}
             </div>
             <div id="signup-success" class="success-text" data-i18n="auth_contact_success" style="margin-top: 0 !important; margin-bottom: 0 !important; min-height: 1.25rem !important; line-height: 1.25rem !important;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -605,7 +666,9 @@ function renderLoginScreen() {
     return `
         <div style="width: 100%; max-width: 360px; margin: 0 auto; background: var(--card-bg); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="text-align: center; margin-bottom: 1.25rem;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 1rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <h1 style="font-size: 1.75rem; font-weight: 700; margin: 0 0 12px 0; color: var(--text-main);">Guidance<span style="color: var(--primary-color);">Pro</span></h1>
+                
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 16px; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text-main); margin: 0 0 0.25rem 0;" data-i18n="auth_signin_title">Welcome Back</h2>
                 <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0;" data-i18n="auth_signin_sub">Welcome back! Sign in to continue your journey.</p>
             </div>
@@ -617,19 +680,33 @@ function renderLoginScreen() {
                 </div>
             </div>
 
-            <div style="margin-bottom: 0.5rem; position: relative;">
-                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); display: flex; align-items: center; justify-content: center;">
-                    ${isEmail ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>'}
+            <div style="margin-bottom: 0.5rem; position: relative; display: flex; ${!isEmail ? 'gap: 10px;' : ''}">
+                ${isEmail ? `
+                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; z-index: 2;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                 </div>
-                <input type="${isEmail ? 'email' : 'tel'}" 
-                       id="login-input" 
-                       class="auth-minimal-input ${AppState.authError ? 'error-input' : ''}" 
-                       placeholder="Enter your ${isEmail ? 'email address' : 'mobile number'}"
-                       data-i18n-placeholder="${isEmail ? 'login_input_email' : 'login_input_mobile'}"
-                       value="${AppState.authValue}"
-                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid ${AppState.authError ? '#ef4444' : 'var(--border-color)'}; background: var(--surface-solid); color: var(--text-main); font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
-                <div id="login-error" class="error-text ${AppState.authError ? 'show' : ''}" data-i18n="${isEmail ? 'login_error_email' : 'login_error_mobile'}" style="color: #ef4444; font-size: 0.75rem; margin-top: 0; min-height: 1.25rem; display: ${AppState.authError ? 'block' : 'none'};">
-                    ${isEmail ? 'Please enter a valid email address.' : 'Please enter a valid 10-digit mobile number.'}
+                ` : `
+                <select id="login-country-code" style="width: 90px; padding: 0.875rem 0.25rem; border-radius: 12px; border: 1px solid ${AppState.authError ? '#ef4444' : 'var(--border-color)'}; background: var(--surface-solid); color: var(--text-main); font-size: 0.875rem; outline: none; cursor: pointer; appearance: auto; text-align: center; flex-shrink: 0;">
+                    <option value="+91" ${AppState.countryCode === '+91' ? 'selected' : ''}>🇮🇳 +91</option>
+                    <option value="+1_US" ${AppState.countryCode === '+1_US' ? 'selected' : ''}>🇺🇸 +1</option>
+                    <option value="+44" ${AppState.countryCode === '+44' ? 'selected' : ''}>🇬🇧 +44</option>
+                    <option value="+1_CA" ${AppState.countryCode === '+1_CA' ? 'selected' : ''}>🇨🇦 +1</option>
+                    <option value="+61" ${AppState.countryCode === '+61' ? 'selected' : ''}>🇦🇺 +61</option>
+                    <option value="+65" ${AppState.countryCode === '+65' ? 'selected' : ''}>🇸🇬 +65</option>
+                </select>
+                `}
+                <div style="position: relative; flex: 1;">
+                    <input type="${isEmail ? 'email' : 'tel'}" 
+                           id="login-input" 
+                           class="auth-minimal-input ${AppState.authError ? 'error-input' : ''}" 
+                           placeholder="${isEmail ? 'Enter your email address' : 'Enter mobile number'}"
+                           autocomplete="off"
+                           data-i18n-placeholder="${isEmail ? 'login_input_email' : 'login_input_mobile'}"
+                           value="${AppState.authValue}"
+                           style="width: 100%; padding: 0.875rem 1rem 0.875rem ${isEmail ? '2.75rem' : '1rem'}; border-radius: 12px; border: 1px solid ${AppState.authError ? '#ef4444' : 'var(--border-color)'}; background: var(--surface-solid); color: var(--text-main); font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
+                    <div id="login-error" class="error-text ${AppState.authError ? 'show' : ''}" data-i18n="${isEmail ? 'login_error_email' : 'login_error_mobile'}" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.25rem; min-height: 1.25rem; display: ${AppState.authError ? 'block' : 'none'};">
+                        ${isEmail ? 'Please enter a valid email address.' : 'Please enter a valid phone number.'}
+                    </div>
                 </div>
             </div>
 
@@ -651,29 +728,47 @@ function renderLoginScreen() {
 }
 
 function renderOtpScreen() {
+    // Determine number format based on inputs
+    const sentTo = AppState.authMethod === 'mobile' ? (AppState.countryCode && AppState.countryCode.split('_')[0]) + AppState.authValue : AppState.authValue;
+
     return `
-        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: var(--card-bg); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <div style="text-align: center; margin-bottom: 1.25rem;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 0.75rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: var(--card-bg); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;">
+            <!-- Back Button -->
+            <button id="btn-otp-back" style="position: absolute; top: 1.5rem; left: 1.5rem; background: transparent; border: none; font-size: 0.875rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 0.25rem; padding: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span data-i18n="btn_back">Back</span>
+            </button>
+
+            <div style="text-align: center; margin-bottom: 1.25rem; margin-top: 2rem;">
+                <h1 style="font-size: 1.75rem; font-weight: 700; margin: 0 0 12px 0; color: var(--text-main);">Guidance<span style="color: var(--primary-color);">Pro</span></h1>
+                
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 16px; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text-main); margin: 0 0 0.25rem 0;" data-i18n="otp_title">Verify Secure OTP</h2>
-                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0;" data-i18n="otp_sub">Please enter the 4-digit verification code</p>
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem; margin: 0;">
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0;">Enter OTP sent to</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <strong dir="ltr" style="font-size: 0.875rem; color: var(--text-main);">${sentTo}</strong>
+                        <button id="btn-otp-edit" style="background: transparent; border: none; font-size: 0.75rem; color: var(--primary-color); cursor: pointer; text-decoration: underline; padding: 0;">Edit</button>
+                    </div>
+                </div>
             </div>
 
             <div style="margin-bottom: 1rem;">
                 <input type="text" 
                        id="otp-input" 
                        style="width: 100%; text-align: center; font-size: 1.25rem; letter-spacing: 0.5em; padding: 0.75rem; border-radius: 6px; border: 1px solid #374151; background: var(--surface-solid); color: var(--text-main); outline: none;"
-                       maxlength="4"
-                       placeholder="••••">
-                <div id="otp-error" class="error-text" data-i18n="otp_error_invalid" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none; text-align: center;">Invalid OTP. Please try '1234'.</div>
+                       maxlength="6"
+                       placeholder="••••••">
+                <div id="otp-error" class="error-text" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none; text-align: center;">The OTP you entered is incorrect.</div>
             </div>
 
             <button id="btn-verify-otp" style="width: 100%; padding: 0.75rem; background: var(--primary-color); color: var(--btn-text); border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; margin-bottom: 1.5rem;">
                 <span data-i18n="otp_btn">Verify OTP</span>
             </button>
             
-            <div style="text-align: center;">
-                <button id="btn-resend-otp" style="background: transparent; border: none; color: var(--text-muted); font-size: 0.875rem; cursor: pointer; padding: 0;">
+            <div style="text-align: center; font-size: 0.875rem;">
+                <span id="otp-timer-text" style="color: var(--text-muted); display: block; margin-bottom: 0.5rem; font-weight: 500;">Resend OTP in <span id="otp-countdown">30</span>s</span>
+                <button id="btn-resend-otp" disabled style="background: transparent; border: none; color: var(--primary-color); font-weight: 600; font-size: 0.875rem; cursor: not-allowed; opacity: 0.5; padding: 0; text-decoration: underline;">
                     <span data-i18n="otp_resend">Resend OTP</span>
                 </button>
             </div>
@@ -789,6 +884,20 @@ function navigate(route) {
     if (route === '/profile') renderScreen('profile');
     else if (route === '/edit-profile') renderScreen('edit_profile');
     else if (route === '/welcome') renderScreen('welcome');
+    else if (route === '/admin' || route === '/admin-dashboard') {
+        if (AppState.userRole === 'admin' || AppState.userRole === 'super_admin') {
+            renderScreen('admin_panel');
+        } else {
+            // Block redirect attempt completely if typed in URL
+            DOM.mainArea.innerHTML = `
+                <div class="onboarding-container" style="max-width: 800px; text-align: center;">
+                    <h2 style="font-size: 1.5rem; font-weight: 700; color: #ef4444;">Access denied. Admin privileges required.</h2>
+                    <br>
+                    <button class="btn btn-primary" onclick="window.renderScreen('welcome')">Return to Dashboard</button>
+                </div>
+            `;
+        }
+    }
 }
 
 function renderProfileScreen() {
@@ -1336,9 +1445,9 @@ function renderAdminScreen() {
     if (AppState.userRole !== 'admin' && AppState.userRole !== 'super_admin') {
         return `
             <div class="onboarding-container" style="max-width: 800px; text-align: center;">
-                <h2 style="font-size: 1.5rem; font-weight: 700; color: #ef4444;">Access Denied</h2>
-                <p style="color: var(--text-muted); margin-top: 1rem;">You do not have permission to access the Administrator Panel.</p>
-                <button class="btn btn-primary" onclick="window.renderScreen('welcome')" style="margin-top: 2rem;">Return to Dashboard</button>
+                <h2 style="font-size: 1.5rem; font-weight: 700; color: #ef4444;">Access denied. Admin privileges required.</h2>
+                <br>
+                <button class="btn btn-primary" onclick="window.renderScreen('welcome')">Return to Dashboard</button>
             </div>
         `;
     }
@@ -1350,11 +1459,23 @@ function renderAdminScreen() {
                 <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);" data-i18n="prof_item_admin">Admin Panel</h2>
                 <button class="btn btn-outline" id="admin-back-btn" style="padding: 0.5rem 1rem;">Back</button>
             </div>
-            <p style="color: var(--text-muted); margin-bottom: 2rem;">Edit dynamic fields. Changes will be saved locally and reflect globally immediately.</p>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Manage courses, notifications, feedback, and user reports.</p>
             
-            <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem;">
-                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Exam Updates</h3>
-                <div id="admin-exams-form">
+            <div class="admin-sections-grid" style="display: grid; gap: 1.5rem;">
+                
+                <!-- Course Management Section stub -->
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.25rem; font-weight: 600;">Course Management</h3>
+                        <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">+ Add Course</button>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">Manage the database for Academic Courses / Degrees listed in recommendations.</p>
+                </div>
+
+                <!-- Exam Updates Section -->
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem;">Exam Updates (KCET / NEET)</h3>
+                    <div id="admin-exams-form">
     `;
 
     if (AppData && AppData.examUpdates) {
@@ -1388,8 +1509,38 @@ function renderAdminScreen() {
     }
 
     html += `
+                    </div>
+                    <button class="btn btn-secondary" id="admin-save-exams" style="width: 100%; margin-top: 1rem;">Save Exam Overrides</button>
                 </div>
-                <button class="btn btn-primary" id="admin-save-exams" style="width: 100%; margin-top: 1rem;">Save Exam Overrides</button>
+
+                <!-- User Feedback Section stub -->
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.25rem; font-weight: 600;">User Feedback</h3>
+                        <span style="font-size: 0.875rem; background: var(--primary-color); color: white; padding: 0.2rem 0.6rem; border-radius: 1rem;">0 New</span>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.875rem;">View generic suggestions and feature requests.</p>
+                </div>
+
+                <!-- Bug Reports Section stub -->
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.25rem; font-weight: 600;">Bug Reports</h3>
+                        <span style="font-size: 0.875rem; background: #ef4444; color: white; padding: 0.2rem 0.6rem; border-radius: 1rem;">0 Pending</span>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.875rem;">Investigate technical issues reported by users along with uploaded screenshots.</p>
+                </div>
+
+                <!-- Send Notifications Server stub -->
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Push System Notifications</h3>
+                    <div class="input-group" style="margin-bottom: 1rem;">
+                        <input type="text" class="input-field" placeholder="Notification Title..." style="margin-bottom: 0.5rem;" />
+                        <textarea class="input-field" placeholder="Message body..." style="min-height: 80px;"></textarea>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;">Broadcast to All Users</button>
+                </div>
+
             </div>
         </div>
     `;
@@ -1502,7 +1653,13 @@ function attachScreenListeners(screenName) {
                 let fieldValid = false;
 
                 if (AppState.authMethod === 'mobile') {
-                    fieldValid = /^\d{10}$/.test(val);
+                    // Get expected length based on country code
+                    let expectedLength = 10;
+                    if (AppState.countryCode === '+61') expectedLength = 9;
+                    else if (AppState.countryCode === '+65') expectedLength = 8;
+
+                    const regex = new RegExp(`^\\d{${expectedLength}}$`);
+                    fieldValid = regex.test(val);
                 } else {
                     fieldValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
                 }
@@ -1529,7 +1686,15 @@ function attachScreenListeners(screenName) {
                         if (AppState.touched.contact) {
                             input.classList.remove('error-input');
                             input.style.borderColor = 'var(--border-color)'; // Keep neutral
-                            if (emailErr) { emailErr.style.display = 'block'; emailErr.style.visibility = 'visible'; }
+                            if (emailErr) {
+                                emailErr.style.display = 'block';
+                                emailErr.style.visibility = 'visible';
+                                if (AppState.authMethod === 'mobile') {
+                                    emailErr.textContent = 'Please enter a valid 10-digit mobile number.';
+                                } else {
+                                    emailErr.textContent = 'Please enter a valid email address.';
+                                }
+                            }
                         } else {
                             input.classList.remove('error-input');
                             input.style.borderColor = 'var(--border-color)';
@@ -1573,12 +1738,24 @@ function attachScreenListeners(screenName) {
 
         if (input) {
             input.addEventListener('input', (e) => {
+                if (AppState.authMethod === 'mobile') {
+                    e.target.value = e.target.value.replace(/\D/g, '');
+                }
                 AppState.authValue = e.target.value;
                 checkFormValidity();
             });
             input.addEventListener('blur', () => {
                 if (isSignup) AppState.touched.contact = true;
                 checkFormValidity();
+            });
+        }
+
+        const countrySelect = document.getElementById(`${prefix}-country-code`);
+        if (countrySelect) {
+            countrySelect.addEventListener('change', (e) => {
+                AppState.countryCode = e.target.value;
+                checkFormValidity();
+                if (input) input.focus();
             });
         }
 
@@ -1602,17 +1779,20 @@ function attachScreenListeners(screenName) {
 
         tabs.forEach(tab => {
             tab.addEventListener('click', (e) => {
-                if (nameInput) AppState.userName = nameInput.value;
-                AppState.authMethod = e.target.dataset.method;
-                AppState.authValue = input ? input.value : '';
-                AppState.authError = false;
-                renderScreen(screenName);
+                const newMethod = e.target.dataset.method;
+                if (AppState.authMethod !== newMethod) {
+                    if (nameInput) AppState.userName = nameInput.value;
+                    AppState.authMethod = newMethod;
+                    AppState.authValue = ''; // Clear value when toggling
+                    AppState.authError = false;
+                    renderScreen(screenName);
 
-                // Auto-focus the contact input when switching methods (mostly for signup)
-                setTimeout(() => {
-                    const newInput = document.getElementById(`${prefix}-input`);
-                    if (newInput) newInput.focus();
-                }, 50);
+                    // Auto-focus the contact input when switching methods (mostly for signup)
+                    setTimeout(() => {
+                        const newInput = document.getElementById(`${prefix}-input`);
+                        if (newInput) newInput.focus();
+                    }, 50);
+                }
             });
         });
 
@@ -1697,7 +1877,31 @@ function attachScreenListeners(screenName) {
                 if (nameInput) AppState.userName = nameInput.value.trim();
 
                 if (AppState.authMethod === 'mobile') {
-                    console.log("Mocking OTP for mobile.");
+                    const fullNumber = (AppState.countryCode.split('_')[0]) + AppState.authValue;
+                    console.log("Initiating SMS for: " + fullNumber);
+
+                    if (window.recaptchaVerifier && typeof firebase !== 'undefined') {
+                        const originalText = sendBtn.innerHTML;
+                        sendBtn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;"></div>';
+
+                        firebase.auth().signInWithPhoneNumber(fullNumber, window.recaptchaVerifier)
+                            .then((confirmationResult) => {
+                                window.confirmationResult = confirmationResult;
+                                AppState.resendCount = 0; // reset on fresh send
+                                sendBtn.innerHTML = originalText;
+                                renderScreen('otp');
+                            }).catch((error) => {
+                                console.error("SMS not sent", error);
+                                sendBtn.innerHTML = originalText;
+                                // Graceful fallback for development / quota limits
+                                alert("Failed to send real SMS via Firebase. Falling back to simulated OTP for testing. Please use 123456 to verify.");
+                                window.confirmationResult = null;
+                                renderScreen('otp');
+                                if (window.recaptchaVerifier) window.recaptchaVerifier.clear();
+                                setupRecaptcha(); // Reset recaptcha
+                            });
+                        return;
+                    }
                 }
                 renderScreen('otp');
             });
@@ -1709,71 +1913,173 @@ function attachScreenListeners(screenName) {
         const resendBtn = document.getElementById('btn-resend-otp');
         const input = document.getElementById('otp-input');
         const errorText = document.getElementById('otp-error');
+        const timerTextSpan = document.getElementById('otp-timer-text');
+        const backBtn = document.getElementById('btn-otp-back');
+        const editBtn = document.getElementById('btn-otp-edit');
+
+        // Back / Edit handlers
+        const goBackToAuth = () => {
+            // Keep the entered data (authValue/name/gender)
+            if (AppState.authType === 'signup') {
+                renderScreen('signup');
+                setTimeout(() => {
+                    const focusInput = document.getElementById('signup-input');
+                    if (focusInput) focusInput.focus();
+                }, 50);
+            } else {
+                renderScreen('login');
+                setTimeout(() => {
+                    const focusInput = document.getElementById('login-input');
+                    if (focusInput) focusInput.focus();
+                }, 50);
+            }
+        };
+
+        if (backBtn) backBtn.addEventListener('click', goBackToAuth);
+        if (editBtn) editBtn.addEventListener('click', goBackToAuth);
+
+        if (input) {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+        }
+
+        // Timer Logic
+        let timerSeconds = 30;
+        let timerInterval = null;
+
+        const startTimer = () => {
+            clearInterval(timerInterval);
+            timerSeconds = 30;
+            if (timerTextSpan) timerTextSpan.innerHTML = `Resend OTP in <span id="otp-countdown">${timerSeconds}</span>s`;
+            resendBtn.setAttribute('disabled', 'true');
+            resendBtn.style.cursor = 'not-allowed';
+            resendBtn.style.opacity = '0.5';
+
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                const currentCountdown = document.getElementById('otp-countdown');
+                if (currentCountdown) currentCountdown.textContent = timerSeconds;
+
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    if (timerTextSpan) timerTextSpan.innerHTML = "";
+
+                    if (AppState.resendCount < 3) {
+                        resendBtn.removeAttribute('disabled');
+                        resendBtn.style.cursor = 'pointer';
+                        resendBtn.style.opacity = '1';
+                    } else {
+                        if (timerTextSpan) timerTextSpan.innerHTML = "Maximum resend attempts reached.";
+                    }
+                }
+            }, 1000);
+        };
+
+        startTimer();
+
+        const processSuccess = () => {
+            AppState.isAuthenticated = true;
+            let role = 'student';
+            const lowerAuth = typeof AppState.authValue === 'string' ? AppState.authValue.toLowerCase() : '';
+            if (lowerAuth.includes('superadmin') || lowerAuth === 'super@example.com') {
+                role = 'super_admin';
+            } else if (lowerAuth.includes('admin') || lowerAuth === 'admin@example.com') {
+                role = 'admin';
+            } else if (lowerAuth.includes('editor')) {
+                role = 'editor';
+            }
+            AppState.userRole = role;
+
+            const adminMenuBtn = document.getElementById('menu-admin-panel');
+            if (role === 'admin' || role === 'super_admin') {
+                if (adminMenuBtn) adminMenuBtn.style.display = 'block';
+                startAdminInactivityTimer();
+            } else {
+                if (adminMenuBtn) adminMenuBtn.style.display = 'none';
+            }
+
+            if (AppState.authType === 'signup') {
+                errorText.style.color = '#10b981';
+                errorText.innerHTML = '<span style="display: flex; align-items: center; justify-content: center; gap: 0.25rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Account verified successfully</span>';
+                errorText.classList.add('show');
+                setTimeout(() => {
+                    if (!AppState.dateJoined) saveUserProfile();
+                    renderScreen('welcome');
+                }, 1500);
+            } else {
+                errorText.classList.remove('show');
+                if (!AppState.dateJoined) saveUserProfile();
+                renderScreen('welcome');
+            }
+        };
 
         verifyBtn.addEventListener('click', () => {
             const val = input.value.trim();
 
-            // Mock verify with code 1234
-            if (val === '1234') {
-                AppState.isAuthenticated = true;
+            if (window.confirmationResult) {
+                const originalText = verifyBtn.innerHTML;
+                verifyBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0 auto;"></div>';
+                verifyBtn.disabled = true;
 
-                // Assign matching Role mapped to login value
-                let role = 'student';
-                const lowerAuth = typeof AppState.authValue === 'string' ? AppState.authValue.toLowerCase() : '';
-                if (lowerAuth.includes('superadmin') || lowerAuth === 'super@example.com') {
-                    role = 'super_admin';
-                } else if (lowerAuth.includes('admin') || lowerAuth === 'admin@example.com') {
-                    role = 'admin';
-                } else if (lowerAuth.includes('editor')) {
-                    role = 'editor';
-                }
-                AppState.userRole = role;
+                window.confirmationResult.confirm(val).then((result) => {
+                    processSuccess();
+                }).catch((error) => {
+                    verifyBtn.innerHTML = originalText;
+                    verifyBtn.disabled = false;
+                    errorText.style.color = '#ef4444';
 
-                // Sync Visibility and Timers based on role
-                const adminMenuBtn = document.getElementById('menu-admin-panel');
-                if (role === 'admin' || role === 'super_admin') {
-                    if (adminMenuBtn) adminMenuBtn.style.display = 'block';
-                    startAdminInactivityTimer();
-                } else {
-                    if (adminMenuBtn) adminMenuBtn.style.display = 'none';
-                }
-
-                if (AppState.authType === 'signup') {
-                    // Show success state for OTP
-                    errorText.style.color = '#10b981';
-                    errorText.innerHTML = '<span style="display: flex; align-items: center; justify-content: center; gap: 0.25rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Account created successfully</span>';
-                    errorText.classList.add('show');
-
-                    // Delay transition to welcome screen
-                    setTimeout(() => {
-                        // Re-load profile if it exists, otherwise save new one
-                        if (!AppState.dateJoined) {
-                            saveUserProfile();
-                        }
-                        renderScreen('welcome');
-                    }, 1500);
-                } else {
-                    errorText.classList.remove('show');
-
-                    // Re-load profile if it exists, otherwise save new one
-                    if (!AppState.dateJoined) {
-                        saveUserProfile();
+                    if (error.code === 'auth/invalid-verification-code') {
+                        errorText.textContent = "The OTP you entered is incorrect.";
+                    } else if (error.code === 'auth/code-expired') {
+                        errorText.textContent = "OTP expired. Please request a new code.";
+                    } else {
+                        errorText.textContent = "Verification failed. Please try again.";
                     }
-
-                    // For sign in, skip the Welcome screen, go to level_select
-                    renderScreen('welcome');
-                }
+                    errorText.classList.add('show');
+                    input.value = '';
+                    input.focus();
+                });
             } else {
-                errorText.style.color = '#ef4444';
-                errorText.textContent = "Invalid OTP. Please try '1234'.";
-                errorText.classList.add('show');
-                input.value = ''; // clear on fail
-                input.focus();
+                // Mock verify
+                if (val === '123456' || val === '1234') {
+                    processSuccess();
+                } else {
+                    errorText.style.color = '#ef4444';
+                    errorText.textContent = "The OTP you entered is incorrect.";
+                    errorText.classList.add('show');
+                    input.value = '';
+                    input.focus();
+                }
             }
         });
 
         resendBtn.addEventListener('click', () => {
-            alert('A new simulated OTP has been sent! (Use 1234)');
+            if (AppState.resendCount >= 3) return;
+            AppState.resendCount++;
+
+            if (AppState.authMethod === 'mobile' && window.recaptchaVerifier && typeof firebase !== 'undefined') {
+                const fullNumber = (AppState.countryCode.split('_')[0]) + AppState.authValue;
+                const originalText = resendBtn.innerHTML;
+                resendBtn.innerHTML = "Sending...";
+
+                firebase.auth().signInWithPhoneNumber(fullNumber, window.recaptchaVerifier)
+                    .then((confirmationResult) => {
+                        window.confirmationResult = confirmationResult;
+                        resendBtn.innerHTML = originalText;
+                        startTimer();
+                        alert('A new OTP has been sent via SMS.');
+                    }).catch((error) => {
+                        console.error("SMS resend failed", error);
+                        resendBtn.innerHTML = originalText;
+                        alert("Failed to resend real SMS. Falling back to simulated OTP (Use 123456).");
+                        window.confirmationResult = null;
+                        startTimer();
+                    });
+            } else {
+                startTimer();
+                alert('A new simulated OTP has been sent! (Use 123456)');
+            }
         });
     }
 

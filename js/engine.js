@@ -265,13 +265,13 @@ function calculateResults() {
         })
         .sort((a, b) => b.matchScore - a.matchScore);
 
-    // Filter top 2-3 matches
-    AppState.topCourses = scoredCourses.slice(0, 3);
-    AppState.topExams = scoredExams.slice(0, 3);
+    // Store full calculated lists (removed 3-item limits)
+    AppState.topCourses = scoredCourses;
+    AppState.topExams = scoredExams;
 
-    // Store unmatched for negative explanation
-    AppState.unmatchedCourses = scoredCourses.slice(3, 6);
-    AppState.unmatchedExams = scoredExams.slice(3, 6);
+    // Clear unmatched arrays as we're rendering all valid tiered hits
+    AppState.unmatchedCourses = [];
+    AppState.unmatchedExams = [];
 }
 
 function renderRecommendations() {
@@ -322,27 +322,58 @@ function renderRecommendations() {
         <div class="results-grid" style="display: grid; grid-template-columns: ${gridCols}; gap: 2rem;">
     `;
 
+    // Helper to generate the HTML for a categorical section
+    function generateSectionHTML(title, items, typePrefix, emptyMsg) {
+        if (!items || items.length === 0) return '';
+
+        let sectionHtml = `
+            <div style="margin-bottom: 2rem;">
+                <h4 style="font-size: 1.125rem; font-weight: 600; color: var(--text-main); margin-bottom: 1rem; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.5rem;">${title}</h4>
+        `;
+
+        items.forEach((item, idx) => {
+            sectionHtml += createResultCard(item, lang, typePrefix + '_' + idx);
+        });
+
+        sectionHtml += `</div>`;
+        return sectionHtml;
+    }
+
     if (showCourses) {
+        // Categorize Courses
+        const highlyRecommendedCourses = AppState.topCourses.filter(c => c.confidenceScore >= 80);
+        const recommendedCourses = AppState.topCourses.filter(c => c.confidenceScore >= 60 && c.confidenceScore < 80);
+        const otherCourses = AppState.topCourses.filter(c => c.confidenceScore < 60);
+
         html += `
             <!-- Courses Column -->
             <div class="results-col">
-                <h3 style="margin-bottom: 1.5rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;" data-i18n="tab_courses">Courses</h3>
+                <h3 style="margin-bottom: 1.5rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;" data-i18n="tab_courses">Courses & Career Paths</h3>
         `;
-        AppState.topCourses.forEach((c, idx) => {
-            html += createResultCard(c, lang, idx + 'c');
-        });
+
+        html += generateSectionHTML('Highly Recommended', highlyRecommendedCourses, 'c_high', 'No high matches.');
+        html += generateSectionHTML('Recommended', recommendedCourses, 'c_med', 'No medium matches.');
+        html += generateSectionHTML('Other Possible Options', otherCourses, 'c_other', 'No other matches.');
+
         html += `</div>`;
     }
 
     if (showExams) {
+        // Categorize Exams
+        const highlyRecommendedExams = AppState.topExams.filter(e => e.confidenceScore >= 80);
+        const recommendedExams = AppState.topExams.filter(e => e.confidenceScore >= 60 && e.confidenceScore < 80);
+        const otherExams = AppState.topExams.filter(e => e.confidenceScore < 60);
+
         html += `
             <!-- Exams Column -->
             <div class="results-col">
                 <h3 style="margin-bottom: 1.5rem; color: var(--secondary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;" data-i18n="tab_exams">Govt Exams</h3>
         `;
-        AppState.topExams.forEach((e, idx) => {
-            html += createResultCard(e, lang, idx + 'e');
-        });
+
+        html += generateSectionHTML('Highly Recommended', highlyRecommendedExams, 'e_high', 'No high matches.');
+        html += generateSectionHTML('Recommended', recommendedExams, 'e_med', 'No medium matches.');
+        html += generateSectionHTML('Other Possible Options', otherExams, 'e_other', 'No other matches.');
+
         html += `</div>`;
     }
 
