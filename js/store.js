@@ -25,6 +25,17 @@ const AdminStore = {
             AppData.examUpdates = updatesArray;
         }
 
+        // Log Admin Action Functionality
+        try {
+            const logs = JSON.parse(localStorage.getItem('sg_admin_logs') || '[]');
+            logs.push({
+                adminId: (typeof AppState !== 'undefined' && AppState.authValue) ? AppState.authValue : 'unknown_admin',
+                action: 'Updated Exam Notifications',
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('sg_admin_logs', JSON.stringify(logs));
+        } catch (e) { console.error("Could not write log", e); }
+
         // Trigger notifications check if applicable
         if (typeof NotificationManager !== 'undefined') {
             NotificationManager.checkForUpdates();

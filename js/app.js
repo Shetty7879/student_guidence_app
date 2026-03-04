@@ -12,7 +12,79 @@ const AppState = {
     selectedLevel: null,
     selectedInterest: null, // courses, exams, both
     answers: [],
-    language: 'en' // default language
+    language: 'en', // default language
+    dateJoined: null, // added for profile
+    profilePicture: null // Base64 encoded image
+};
+
+// ---------------------------------------------------------
+// User Profile Storage
+// ---------------------------------------------------------
+
+function saveUserProfile() {
+    if (!AppState.isAuthenticated) return;
+
+    // Create joined date if it doesn't exist
+    if (!AppState.dateJoined) {
+        AppState.dateJoined = new Date().toISOString();
+    }
+
+    const profileData = {
+        userName: AppState.userName,
+        userGender: AppState.userGender,
+        authValue: AppState.authValue,
+        authMethod: AppState.authMethod,
+        selectedLevel: AppState.selectedLevel,
+        selectedInterest: AppState.selectedInterest,
+        dateJoined: AppState.dateJoined,
+        language: AppState.language,
+        profilePicture: AppState.profilePicture
+    };
+
+    localStorage.setItem('sg_user_profile', JSON.stringify(profileData));
+}
+
+function loadUserProfile() {
+    const saved = localStorage.getItem('sg_user_profile');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            AppState.userName = data.userName || '';
+            AppState.userGender = data.userGender || null;
+            AppState.authValue = data.authValue || '';
+            AppState.authMethod = data.authMethod || 'email';
+            AppState.selectedLevel = data.selectedLevel || null;
+            AppState.selectedInterest = data.selectedInterest || null;
+            AppState.dateJoined = data.dateJoined || null;
+            if (data.language) {
+                AppState.language = data.language;
+                if (DOM.langSelect) DOM.langSelect.value = data.language;
+            }
+            AppState.profilePicture = data.profilePicture || null;
+            if (typeof window.updateNavbarAvatar === 'function') {
+                window.updateNavbarAvatar();
+            }
+        } catch (e) {
+            console.error('Failed to load user profile from storage', e);
+        }
+    }
+}
+
+window.updateNavbarAvatar = function () {
+    const defaultAvatarSvg = document.getElementById('navbar-default-avatar');
+    const userAvatarImg = document.getElementById('navbar-user-avatar');
+
+    if (defaultAvatarSvg && userAvatarImg) {
+        if (AppState.profilePicture) {
+            userAvatarImg.src = AppState.profilePicture;
+            userAvatarImg.classList.remove('hidden');
+            defaultAvatarSvg.classList.add('hidden');
+        } else {
+            userAvatarImg.src = '';
+            userAvatarImg.classList.add('hidden');
+            defaultAvatarSvg.classList.remove('hidden');
+        }
+    }
 };
 
 const DOM = {
@@ -37,7 +109,18 @@ function initApp() {
     DOM.langSelect?.addEventListener('change', (e) => {
         AppState.language = e.target.value;
         updateTranslations();
-        renderScreen(AppState.currentScreen); // Re-render current screen with new language
+
+        // Custom DOM updates to avoid full re-rendering and erasing user progress
+        if (AppState.currentScreen === 'quiz' && typeof renderNextQuestion === 'function') {
+            // Re-render just the quiz active question text and options
+            renderNextQuestion();
+        } else if (AppState.currentScreen === 'results' && typeof renderRecommendations === 'function') {
+            // Re-render just the injected results lists
+            renderRecommendations();
+        } else {
+            // For other static screens, a re-render is safe
+            renderScreen(AppState.currentScreen);
+        }
     });
 
     // Setup Theme listener
@@ -78,54 +161,118 @@ function initApp() {
         AppState.isAuthenticated = false;
         AppState.authValue = '';
         AppState.userName = '';
+        AppState.userRole = 'student';
         AppState.answers = [];
         AppState.selectedLevel = null;
         AppState.selectedInterest = null; // Reset selected interest on logout
+        AppState.dateJoined = null;
+        localStorage.removeItem('sg_user_profile'); // Clear saved profile
+
         DOM.profileDropdown.classList.add('hidden');
         renderScreen('login');
-    });
 
-    document.getElementById('menu-theme-toggle')?.addEventListener('click', () => {
-        toggleTheme();
-    });
-
-    document.getElementById('menu-retake')?.addEventListener('click', () => {
-        if (AppState.isAuthenticated) {
-            DOM.profileDropdown.classList.add('hidden');
-            renderScreen('level_select');
+        // Clear activity thresholds
+        if (window.adminInactivityTimer) clearTimeout(window.adminInactivityTimer);
+        if (window.adminActivityListenersBound) {
+            ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
+                document.removeEventListener(evt, resetAdminInactivityTimer);
+            });
+            window.adminActivityListenersBound = false;
         }
     });
 
-    document.getElementById('menu-reset')?.addEventListener('click', () => {
-        if (AppState.isAuthenticated) {
-            AppState.answers = [];
-            AppState.selectedLevel = null;
-            AppState.selectedInterest = null; // Reset selected interest on reset
-            DOM.profileDropdown.classList.add('hidden');
-            renderScreen('welcome');
+    // Profile Menu Click Delegation
+    document.body.addEventListener('click', (e) => {
+        const target = e.target.closest('.dropdown-item');
+        if (!target) return;
+
+        const id = target.id;
+
+        switch (id) {
+            case 'menu-theme-toggle':
+                toggleTheme();
+                break;
+            case 'menu-retake':
+                if (AppState.isAuthenticated) {
+                    DOM.profileDropdown.classList.add('hidden');
+                    renderScreen('level_select');
+                }
+                break;
+            case 'menu-reset':
+                if (AppState.isAuthenticated) {
+                    AppState.answers = [];
+                    AppState.selectedLevel = null;
+                    AppState.selectedInterest = null;
+                    DOM.profileDropdown.classList.add('hidden');
+                    renderScreen('welcome');
+                }
+                break;
+            case 'menu-exam-updates':
+                if (AppState.isAuthenticated) {
+                    DOM.profileDropdown.classList.add('hidden');
+                    renderScreen('exam_updates');
+                }
+                break;
+            case 'menu-admin-panel':
+                if (AppState.isAuthenticated) {
+                    DOM.profileDropdown.classList.add('hidden');
+                    if (AppState.userRole === 'admin' || AppState.userRole === 'super_admin') {
+                        renderScreen('admin_panel');
+                    } else {
+                        alert("Unauthorized Access. You do not have permission to view the Admin Panel.");
+                        renderScreen('welcome');
+                    }
+                }
+                break;
+            case 'menu-language':
+                DOM.profileDropdown.classList.add('hidden');
+                DOM.langSelect.focus();
+                break;
+            case 'menu-view-profile':
+                if (AppState.isAuthenticated) {
+                    DOM.profileDropdown.classList.add('hidden');
+                    navigate('/profile');
+                }
+                break;
+            case 'menu-edit-profile':
+                if (AppState.isAuthenticated) {
+                    DOM.profileDropdown.classList.add('hidden');
+                    navigate('/edit-profile');
+                }
+                break;
+            case 'menu-help':
+                if (AppState.isAuthenticated) { DOM.profileDropdown.classList.add('hidden'); navigate('/help'); }
+                break;
+            case 'menu-contact':
+                if (AppState.isAuthenticated) { DOM.profileDropdown.classList.add('hidden'); navigate('/contact'); }
+                break;
+            case 'menu-report':
+                if (AppState.isAuthenticated) { DOM.profileDropdown.classList.add('hidden'); navigate('/report'); }
+                break;
+            case 'menu-feedback':
+                if (AppState.isAuthenticated) { DOM.profileDropdown.classList.add('hidden'); navigate('/feedback'); }
+                break;
+            case 'menu-about':
+                if (AppState.isAuthenticated) { DOM.profileDropdown.classList.add('hidden'); navigate('/about'); }
+                break;
+            case 'menu-privacy':
+                if (AppState.isAuthenticated) { DOM.profileDropdown.classList.add('hidden'); navigate('/privacy'); }
+                break;
+            case 'menu-terms':
+                if (AppState.isAuthenticated) { DOM.profileDropdown.classList.add('hidden'); navigate('/terms'); }
+                break;
         }
     });
 
-    document.getElementById('menu-exam-updates')?.addEventListener('click', () => {
-        if (AppState.isAuthenticated) {
-            DOM.profileDropdown.classList.add('hidden');
-            renderScreen('exam_updates');
-        }
-    });
-
-    document.getElementById('menu-admin-panel')?.addEventListener('click', () => {
-        if (AppState.isAuthenticated) {
-            DOM.profileDropdown.classList.add('hidden');
-            renderScreen('admin_panel');
-        }
-    });
-
-    document.getElementById('menu-language')?.addEventListener('click', () => {
-        DOM.profileDropdown.classList.add('hidden');
-        DOM.langSelect.focus();
-        // Since it's a native select, we can't easily force it to open programmatically without hacky ways, 
-        // so focusing it is the best approach for accessibility.
-    });
+    // Handle Admin Menu visibility 
+    if (AppState.isAuthenticated && (AppState.userRole === 'admin' || AppState.userRole === 'super_admin')) {
+        const adminMenuBtn = document.getElementById('menu-admin-panel');
+        if (adminMenuBtn) { adminMenuBtn.style.display = 'block'; }
+        startAdminInactivityTimer();
+    } else {
+        const adminMenuBtn = document.getElementById('menu-admin-panel');
+        if (adminMenuBtn) { adminMenuBtn.style.display = 'none'; }
+    }
 
     // Set initial localization then render
     updateTranslations();
@@ -135,10 +282,21 @@ function initApp() {
     setTimeout(() => {
         console.log('Inside setTimeout, isAuthenticated:', AppState.isAuthenticated);
         try {
+            // Attempt to load saved profile
+            loadUserProfile();
+
             // Check Hash for initial routing if unauthenticated
             const hash = window.location.hash;
 
-            if (AppState.isAuthenticated) {
+            // Auto-login if we have a saved profile (simple for now)
+            if (AppState.userName && AppState.authValue && !AppState.isAuthenticated) {
+                AppState.isAuthenticated = true;
+
+                // Re-load profile if it exists, otherwise save new one
+                if (!AppState.dateJoined) {
+                    saveUserProfile();
+                }
+
                 renderScreen('welcome');
             } else if (hash === '#/login') {
                 renderScreen('login');
@@ -150,8 +308,21 @@ function initApp() {
 
             // Listen for hash changes for back/forward navigation or manual entry
             window.addEventListener('hashchange', () => {
-                if (AppState.isAuthenticated) return;
                 const newHash = window.location.hash;
+                if (AppState.isAuthenticated) {
+                    if (newHash === '#/profile') renderScreen('profile');
+                    else if (newHash === '#/edit-profile') renderScreen('edit_profile');
+                    else if (newHash === '#/welcome') renderScreen('welcome');
+                    else if (newHash === '#/help') renderScreen('help');
+                    else if (newHash === '#/contact') renderScreen('contact');
+                    else if (newHash === '#/report') renderScreen('report');
+                    else if (newHash === '#/feedback') renderScreen('feedback');
+                    else if (newHash === '#/about') renderScreen('about');
+                    else if (newHash === '#/privacy') renderScreen('privacy');
+                    else if (newHash === '#/terms') renderScreen('terms');
+                    return;
+                }
+
                 if (newHash === '#/login') {
                     renderScreen('login');
                 } else if (newHash === '#/create-account') {
@@ -218,8 +389,35 @@ function renderScreen(screenName) {
             case 'exam_updates':
                 template = renderExamUpdatesScreen();
                 break;
+            case 'profile':
+                template = renderProfileScreen();
+                break;
+            case 'edit_profile':
+                template = renderEditProfileScreen();
+                break;
             case 'admin_panel':
                 template = renderAdminScreen();
+                break;
+            case 'help':
+                template = renderHelpScreen();
+                break;
+            case 'contact':
+                template = renderContactScreen();
+                break;
+            case 'report':
+                template = renderReportIssueScreen();
+                break;
+            case 'feedback':
+                template = renderFeedbackScreen();
+                break;
+            case 'about':
+                template = renderAboutScreen();
+                break;
+            case 'privacy':
+                template = renderPrivacyPolicyScreen();
+                break;
+            case 'terms':
+                template = renderTermsScreen();
                 break;
             default:
                 template = `<h2>Error: Screen not found</h2>`;
@@ -289,18 +487,18 @@ function renderSignupScreen() {
     const isEmail = AppState.authMethod === 'email';
 
     return `
-        <div class="auth-card" style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div class="auth-card" style="width: 100%; max-width: 360px; margin: 0 auto; background: var(--card-bg); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="text-align: center; margin-bottom: 1.25rem !important;">
                 <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem !important;">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
-                <h2 style="font-size: 1.5rem; font-weight: 600; color: #f9fafb; margin: 0 0 0.5rem 0 !important;" data-i18n="auth_signup_title">Create Your Account</h2>
-                <p style="font-size: 0.875rem; color: #9ca3af; margin: 0 !important;" data-i18n="auth_signup_sub">Let's personalize your guidance journey</p>
+                <h2 style="font-size: 1.5rem; font-weight: 600; color: var(--text-main); margin: 0 0 0.5rem 0 !important;" data-i18n="auth_signup_title">Create Your Account</h2>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0 !important;" data-i18n="auth_signup_sub">Let's personalize your guidance journey</p>
             </div>
 
             <!-- Full Name Input -->
             <div style="margin-bottom: 0.25rem !important; position: relative;">
-                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center;">
+                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); display: flex; align-items: center; justify-content: center;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
                 <input type="text" 
@@ -309,7 +507,7 @@ function renderSignupScreen() {
                        placeholder="Enter full name"
                        data-i18n-placeholder="auth_name_placeholder"
                        value="${AppState.userName || ''}"
-                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: #f9fafb; font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
+                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface-solid); color: var(--text-main); font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
                 <div id="signup-name-success-icon" style="position: absolute; right: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #10b981; display: none; align-items: center; justify-content: center;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
@@ -336,7 +534,7 @@ function renderSignupScreen() {
                     </div>
                     <div style="display: flex; justify-content: center;">
                         <button class="gender-pill ${AppState.userGender === 'Other' ? 'active' : ''}" data-gender="Other" style="width: auto; min-height: 50px; padding: 0.5rem 1.5rem; justify-content: center; flex-direction: row; align-items: center;">
-                            <svg class="gender-icon" style="color: #9ca3af; width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            <svg class="gender-icon" style="color: var(--text-muted); width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                             <span data-i18n="gender_prefer_not_to_say">Prefer not to say</span>
                         </button>
                     </div>
@@ -350,15 +548,15 @@ function renderSignupScreen() {
 
             <!-- Login Method Toggle (Strictly between Gender and Input) -->
             <div style="margin-bottom: 0.75rem !important;" id="signup-method-toggle-container">
-                <div style="display: flex; background: #0f172a; border-radius: 12px; padding: 0.25rem;">
-                    <div class="segment-btn ${isEmail ? 'active' : ''}" data-method="email" data-i18n="login_tab_email" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${isEmail ? '#8b5cf6' : '#9ca3af'}; background: ${isEmail ? '#1e293b' : 'transparent'}; box-shadow: ${isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Email</div>
-                    <div class="segment-btn ${!isEmail ? 'active' : ''}" data-method="mobile" data-i18n="login_tab_mobile" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${!isEmail ? '#8b5cf6' : '#9ca3af'}; background: ${!isEmail ? '#1e293b' : 'transparent'}; box-shadow: ${!isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Mobile Number</div>
+                <div style="display: flex; background: var(--surface-solid); border-radius: 12px; padding: 0.25rem;">
+                    <div class="segment-btn ${isEmail ? 'active' : ''}" data-method="email" data-i18n="login_tab_email" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${isEmail ? 'var(--primary-color)' : 'var(--text-muted)'}; background: ${isEmail ? 'var(--card-bg)' : 'transparent'}; box-shadow: ${isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Email</div>
+                    <div class="segment-btn ${!isEmail ? 'active' : ''}" data-method="mobile" data-i18n="login_tab_mobile" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${!isEmail ? 'var(--primary-color)' : 'var(--text-muted)'}; background: ${!isEmail ? 'var(--card-bg)' : 'transparent'}; box-shadow: ${!isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Mobile Number</div>
                 </div>
             </div>
 
             <!-- Email/Mobile Input -->
             <div style="margin-bottom: 0.25rem !important; position: relative;">
-                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center;">
+                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); display: flex; align-items: center; justify-content: center;">
                     ${isEmail ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>'}
                 </div>
                 <!-- Dynamic type and placeholder based on Auth Method -->
@@ -368,7 +566,7 @@ function renderSignupScreen() {
                        placeholder="Enter your ${isEmail ? 'email address' : 'mobile number'}"
                        data-i18n-placeholder="${isEmail ? 'login_input_email' : 'login_input_mobile'}"
                        value="${AppState.authValue}"
-                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: #f9fafb; font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
+                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface-solid); color: var(--text-main); font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
                 <div id="signup-contact-success-icon" style="position: absolute; right: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #10b981; display: none; align-items: center; justify-content: center;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
@@ -385,7 +583,7 @@ function renderSignupScreen() {
             
             <div id="signup-btn-wrapper" style="cursor: pointer; width: 100%;">
                 <button id="btn-signup" disabled 
-                        style="width: 100%; padding: 0.875rem; border-radius: 12px; border: none; background: #6366f1; color: white; font-size: 1rem; font-weight: 500; cursor: not-allowed; opacity: 0.5; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2); font-family: var(--font-family); pointer-events: none;"
+                        style="width: 100%; padding: 0.875rem; border-radius: 12px; border: none; background: var(--primary-light); color: white; font-size: 1rem; font-weight: 500; cursor: not-allowed; opacity: 0.5; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2); font-family: var(--font-family); pointer-events: none;"
                         data-i18n="signup_btn">
                     Create Account & Send OTP
                 </button>
@@ -393,8 +591,8 @@ function renderSignupScreen() {
             
             <div style="text-align: center; margin-top: 1.5rem !important;">
                 <button id="btn-switch-to-login" data-target="login" style="background: transparent; border: none; font-size: 0.875rem; cursor: pointer; padding: 0;">
-                    <span style="color: #9ca3af;" data-i18n="auth_switch_prompt_signin">Already have an account? </span>
-                    <span style="color: #c4b5fd; font-weight: 500;" data-i18n="auth_switch_action_signin">Sign In</span>
+                    <span style="color: var(--text-muted);" data-i18n="auth_switch_prompt_signin">Already have an account? </span>
+                    <span style="color: var(--primary-light); font-weight: 500;" data-i18n="auth_switch_action_signin">Sign In</span>
                 </button>
             </div>
         </div>
@@ -405,22 +603,22 @@ function renderLoginScreen() {
     const isEmail = AppState.authMethod === 'email';
 
     return `
-        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: var(--card-bg); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="text-align: center; margin-bottom: 1.25rem;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 1rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <h2 style="font-size: 1.25rem; font-weight: 600; color: #f9fafb; margin: 0 0 0.25rem 0;" data-i18n="auth_signin_title">Welcome Back</h2>
-                <p style="font-size: 0.875rem; color: #9ca3af; margin: 0;" data-i18n="auth_signin_sub">Welcome back! Sign in to continue your journey.</p>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 1rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text-main); margin: 0 0 0.25rem 0;" data-i18n="auth_signin_title">Welcome Back</h2>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0;" data-i18n="auth_signin_sub">Welcome back! Sign in to continue your journey.</p>
             </div>
 
             <div style="margin-bottom: 0.75rem;">
-                <div style="display: flex; background: #0f172a; border-radius: 12px; padding: 0.25rem;">
-                    <div class="segment-btn ${isEmail ? 'active' : ''}" data-method="email" data-i18n="login_tab_email" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${isEmail ? '#8b5cf6' : '#9ca3af'}; background: ${isEmail ? '#1e293b' : 'transparent'}; box-shadow: ${isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Email</div>
-                    <div class="segment-btn ${!isEmail ? 'active' : ''}" data-method="mobile" data-i18n="login_tab_mobile" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${!isEmail ? '#8b5cf6' : '#9ca3af'}; background: ${!isEmail ? '#1e293b' : 'transparent'}; box-shadow: ${!isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Mobile Number</div>
+                <div style="display: flex; background: var(--surface-solid); border-radius: 12px; padding: 0.25rem;">
+                    <div class="segment-btn ${isEmail ? 'active' : ''}" data-method="email" data-i18n="login_tab_email" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${isEmail ? 'var(--primary-color)' : 'var(--text-muted)'}; background: ${isEmail ? 'var(--card-bg)' : 'transparent'}; box-shadow: ${isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Email</div>
+                    <div class="segment-btn ${!isEmail ? 'active' : ''}" data-method="mobile" data-i18n="login_tab_mobile" style="flex: 1; text-align: center; padding: 0.75rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 10px; color: ${!isEmail ? 'var(--primary-color)' : 'var(--text-muted)'}; background: ${!isEmail ? 'var(--card-bg)' : 'transparent'}; box-shadow: ${!isEmail ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'}; transition: all 0.2s;">Mobile Number</div>
                 </div>
             </div>
 
             <div style="margin-bottom: 0.5rem; position: relative;">
-                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; display: flex; align-items: center; justify-content: center;">
+                <div style="position: absolute; left: 1rem; top: 1.5rem; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted); display: flex; align-items: center; justify-content: center;">
                     ${isEmail ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>'}
                 </div>
                 <input type="${isEmail ? 'email' : 'tel'}" 
@@ -429,7 +627,7 @@ function renderLoginScreen() {
                        placeholder="Enter your ${isEmail ? 'email address' : 'mobile number'}"
                        data-i18n-placeholder="${isEmail ? 'login_input_email' : 'login_input_mobile'}"
                        value="${AppState.authValue}"
-                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid ${AppState.authError ? '#ef4444' : '#334155'}; background: #0f172a; color: #f9fafb; font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
+                       style="width: 100%; padding: 0.875rem 1rem 0.875rem 2.75rem; border-radius: 12px; border: 1px solid ${AppState.authError ? '#ef4444' : 'var(--border-color)'}; background: var(--surface-solid); color: var(--text-main); font-size: 0.875rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;">
                 <div id="login-error" class="error-text ${AppState.authError ? 'show' : ''}" data-i18n="${isEmail ? 'login_error_email' : 'login_error_mobile'}" style="color: #ef4444; font-size: 0.75rem; margin-top: 0; min-height: 1.25rem; display: ${AppState.authError ? 'block' : 'none'};">
                     ${isEmail ? 'Please enter a valid email address.' : 'Please enter a valid 10-digit mobile number.'}
                 </div>
@@ -437,15 +635,15 @@ function renderLoginScreen() {
 
             <div id="recaptcha-wrapper"></div>
             
-            <button id="btn-login" style="width: 100%; padding: 0.875rem; background: #6366f1; color: #ffffff; border: none; border-radius: 12px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2); font-family: var(--font-family);">
+            <button id="btn-login" style="width: 100%; padding: 0.875rem; background: var(--primary-light); color: var(--btn-text); border: none; border-radius: 12px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2); font-family: var(--font-family);">
                 <span id="btn-login-text" data-i18n="login_btn">Send OTP</span>
             </button>
-            <p id="login-disabled-hint" style="font-size: 0.7rem; color: #6b7280; margin: 0.5rem 0 0 0; text-align: center;">Enter your details to continue.</p>
+            <p id="login-disabled-hint" style="font-size: 0.7rem; color: var(--text-muted); margin: 0.5rem 0 0 0; text-align: center;">Enter your details to continue.</p>
 
             <div style="text-align: center; margin-top: 1.5rem;">
                 <button id="btn-switch-to-signup" data-target="signup" style="background: transparent; border: none; font-size: 0.875rem; cursor: pointer; padding: 0;">
-                    <span style="color: #9ca3af;" data-i18n="auth_switch_prompt_signup">New here? </span>
-                    <span style="color: #4f46e5; font-weight: 500;" data-i18n="auth_switch_action_signup">Create Account</span>
+                    <span style="color: var(--text-muted);" data-i18n="auth_switch_prompt_signup">New here? </span>
+                    <span style="color: var(--primary-color); font-weight: 500;" data-i18n="auth_switch_action_signup">Create Account</span>
                 </button>
             </div>
         </div>
@@ -454,28 +652,28 @@ function renderLoginScreen() {
 
 function renderOtpScreen() {
     return `
-        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: #1e293b; border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="width: 100%; max-width: 360px; margin: 0 auto; background: var(--card-bg); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="text-align: center; margin-bottom: 1.25rem;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 0.75rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <h2 style="font-size: 1.25rem; font-weight: 600; color: #f9fafb; margin: 0 0 0.25rem 0;" data-i18n="otp_title">Verify Secure OTP</h2>
-                <p style="font-size: 0.875rem; color: #9ca3af; margin: 0;" data-i18n="otp_sub">Please enter the 4-digit verification code</p>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 0.75rem; display: block;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--text-main); margin: 0 0 0.25rem 0;" data-i18n="otp_title">Verify Secure OTP</h2>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0;" data-i18n="otp_sub">Please enter the 4-digit verification code</p>
             </div>
 
             <div style="margin-bottom: 1rem;">
                 <input type="text" 
                        id="otp-input" 
-                       style="width: 100%; text-align: center; font-size: 1.25rem; letter-spacing: 0.5em; padding: 0.75rem; border-radius: 6px; border: 1px solid #374151; background: #0f172a; color: #f9fafb; outline: none;"
+                       style="width: 100%; text-align: center; font-size: 1.25rem; letter-spacing: 0.5em; padding: 0.75rem; border-radius: 6px; border: 1px solid #374151; background: var(--surface-solid); color: var(--text-main); outline: none;"
                        maxlength="4"
                        placeholder="••••">
                 <div id="otp-error" class="error-text" data-i18n="otp_error_invalid" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none; text-align: center;">Invalid OTP. Please try '1234'.</div>
             </div>
 
-            <button id="btn-verify-otp" style="width: 100%; padding: 0.75rem; background: #4f46e5; color: #ffffff; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; margin-bottom: 1.5rem;">
+            <button id="btn-verify-otp" style="width: 100%; padding: 0.75rem; background: var(--primary-color); color: var(--btn-text); border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; margin-bottom: 1.5rem;">
                 <span data-i18n="otp_btn">Verify OTP</span>
             </button>
             
             <div style="text-align: center;">
-                <button id="btn-resend-otp" style="background: transparent; border: none; color: #9ca3af; font-size: 0.875rem; cursor: pointer; padding: 0;">
+                <button id="btn-resend-otp" style="background: transparent; border: none; color: var(--text-muted); font-size: 0.875rem; cursor: pointer; padding: 0;">
                     <span data-i18n="otp_resend">Resend OTP</span>
                 </button>
             </div>
@@ -504,8 +702,8 @@ function renderWelcomeScreen() {
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
             </div>
             
-            <h2 class="screen-title" style="margin-bottom: 1rem; font-size: 2rem; color: #f9fafb;">${greetingText}</h2>
-            <p class="screen-sub" style="font-size: 1.125rem; color: #9ca3af; margin-bottom: 2.5rem;">We’re glad to have you here. Let’s plan your future.</p>
+            <h2 class="screen-title" style="margin-bottom: 1rem; font-size: 2rem; color: var(--text-main);">${greetingText}</h2>
+            <p class="screen-sub" style="font-size: 1.125rem; color: var(--text-muted); margin-bottom: 2.5rem;">We’re glad to have you here. Let’s plan your future.</p>
             
             <button id="btn-start" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem; width: 100%; max-width: 300px; margin: 0 auto; display: flex; justify-content: center;">
                 <span>Start My Guidance</span>
@@ -585,6 +783,339 @@ function renderExamUpdatesScreen() {
     `;
     return html;
 }
+
+function navigate(route) {
+    window.location.hash = '#' + route;
+    if (route === '/profile') renderScreen('profile');
+    else if (route === '/edit-profile') renderScreen('edit_profile');
+    else if (route === '/welcome') renderScreen('welcome');
+}
+
+function renderProfileScreen() {
+    // If profile data is undefined, fetch from stored session
+    if (!AppState.userName && AppState.isAuthenticated) {
+        loadUserProfile();
+    }
+
+    // Generate human-readable labels for enums
+    const levelLabels = {
+        'after_10th': 'Class 10th',
+        'puc_science_pcmb': 'PUC Science (PCMB)',
+        'puc_science_pcmc': 'PUC Science (PCMC)',
+        'puc_commerce': 'PUC (Commerce)',
+        'puc_arts': 'PUC (Arts)',
+        'diploma_polytechnic': 'Polytechnic / Diploma',
+        'iti': 'ITI (Industrial Training)',
+        null: 'Not selected yet'
+    };
+
+    const interestLabels = {
+        'courses': 'Academic Courses',
+        'exams': 'Government Exams',
+        'both': 'Both (Courses & Exams)',
+        null: 'Not selected yet'
+    };
+
+    const joinedDateStr = AppState.dateJoined ? new Date(AppState.dateJoined).toLocaleDateString() : 'N/A';
+
+    return `
+        <div class="glass-card" style="max-width: 900px; margin: 2rem auto; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 class="screen-title" style="margin: 0; font-size: 1.5rem;">Your Profile</h2>
+                <button class="btn btn-secondary" onclick="navigate('/welcome')" style="padding: 0.5rem 1rem; font-size: 0.875rem; white-space: nowrap;">Back to Home</button>
+            </div>
+            
+            <div class="avatar-upload-wrapper">
+                <label for="direct-profile-upload" style="cursor: pointer; display: block;" title="Change Profile Picture">
+                    <img id="profile-main-avatar" src="${AppState.profilePicture || 'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 24 24\\\' fill=\\\'none\\\' stroke=\\\'%23ffffff\\\' stroke-width=\\\'1.5\\\' stroke-linecap=\\\'round\\\' stroke-linejoin=\\\'round\\\'><circle cx=\\\'12\\\' cy=\\\'8\\\' r=\\\'5\\\'></circle><path d=\\\'M20 21a8 8 0 0 0-16 0\\\'></path></svg>'}" alt="" class="avatar-large" />
+                </label>
+                <input type="file" id="direct-profile-upload" class="avatar-hidden-input" accept="image/jpeg, image/png, image/webp" onchange="window.handleDirectAvatarUpload(this)">
+            </div>
+
+            <div class="profile-grid">
+                <div class="profile-card-item">
+                    <div class="profile-card-label">Full Name</div>
+                    <div class="profile-card-value">${AppState.userName || 'N/A'}</div>
+                </div>
+                
+                <div class="profile-card-item">
+                    <div class="profile-card-label">Gender</div>
+                    <div class="profile-card-value">${AppState.userGender || 'N/A'}</div>
+                </div>
+
+                <div class="profile-card-item">
+                    <div class="profile-card-label">${AppState.authMethod === 'email' ? 'Email Address' : 'Mobile Number'}</div>
+                    <div class="profile-card-value">${AppState.authValue || 'N/A'}</div>
+                </div>
+                
+                <div class="profile-card-item">
+                    <div class="profile-card-label">Education Level</div>
+                    <div class="profile-card-value" style="color: var(--primary-light);">${levelLabels[AppState.selectedLevel] || levelLabels[null]}</div>
+                </div>
+                
+                <div class="profile-card-item">
+                    <div class="profile-card-label">Selected Interests</div>
+                    <div class="profile-card-value" style="color: var(--secondary-color);">${interestLabels[AppState.selectedInterest] || interestLabels[null]}</div>
+                </div>
+                
+                <div class="profile-card-item">
+                    <div class="profile-card-label">Date Joined</div>
+                    <div class="profile-card-value">${joinedDateStr}</div>
+                </div>
+            </div>
+
+            <div class="edit-profile-btn-wrapper">
+                <button class="btn btn-primary edit-profile-btn" onclick="navigate('/edit-profile')">
+                    Edit Profile
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function renderEditProfileScreen() {
+    // If profile data is undefined, fetch from stored session
+    if (!AppState.userName && AppState.isAuthenticated) {
+        loadUserProfile();
+    }
+
+    const isEmail = AppState.authMethod === 'email';
+
+    return `
+        <div class="glass-card" style="max-width: 600px; margin: 2rem auto; padding: 2rem;">
+            <div style="margin-bottom: 2rem;">
+                <h2 class="screen-title" style="margin: 0; font-size: 1.5rem;">Edit Profile</h2>
+                <p class="screen-sub" style="margin-top: 0.5rem; margin-bottom: 0; font-size: 0.9rem;">Update your personal details below.</p>
+            </div>
+            
+            <div class="avatar-upload-wrapper">
+                <img id="edit-profile-preview" src="${AppState.profilePicture || 'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 24 24\\\' fill=\\\'none\\\' stroke=\\\'%23ffffff\\\' stroke-width=\\\'1.5\\\' stroke-linecap=\\\'round\\\' stroke-linejoin=\\\'round\\\'><circle cx=\\\'12\\\' cy=\\\'8\\\' r=\\\'5\\\'></circle><path d=\\\'M20 21a8 8 0 0 0-16 0\\\'></path></svg>'}" alt="" class="avatar-large" />
+                <label for="profile-img-upload" class="avatar-upload-btn" title="Change Profile Picture">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                </label>
+                <input type="file" id="profile-img-upload" class="avatar-hidden-input" accept="image/jpeg, image/png, image/webp" onchange="window.handleAvatarUpload(this)">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 500;">Full Name</label>
+                <input type="text" id="edit-profile-name" class="form-input" value="${AppState.userName || ''}" placeholder="Enter your full name">
+                <div id="edit-name-error" class="error-text" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none;">Name cannot be empty.</div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 500;">Gender</label>
+                <select id="edit-profile-gender" class="form-input" style="appearance: auto;">
+                    <option value="" disabled ${!AppState.userGender ? 'selected' : ''}>Select Gender</option>
+                    <option value="Male" ${AppState.userGender === 'Male' ? 'selected' : ''}>Male</option>
+                    <option value="Female" ${AppState.userGender === 'Female' ? 'selected' : ''}>Female</option>
+                    <option value="Other" ${AppState.userGender === 'Other' ? 'selected' : ''}>Prefer not to say</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 500;">${isEmail ? 'Email Address' : 'Mobile Number'}</label>
+                <input type="${isEmail ? 'email' : 'text'}" id="edit-profile-contact" class="form-input" value="${AppState.authValue || ''}" placeholder="${isEmail ? 'Enter email' : 'Enter mobile'}">
+                <div id="edit-contact-error" class="error-text" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem; display: none;">${isEmail ? 'Invalid email format.' : 'Invalid mobile format (10 digits).'}</div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 500;">Education Level</label>
+                <select id="edit-profile-level" class="form-input" style="appearance: auto;">
+                    <option value="" ${!AppState.selectedLevel ? 'selected' : ''}>Not Selected</option>
+                    <option value="after_10th" ${AppState.selectedLevel === 'after_10th' ? 'selected' : ''}>Class 10th</option>
+                    <option value="puc_science_pcmb" ${AppState.selectedLevel === 'puc_science_pcmb' ? 'selected' : ''}>PUC Science (PCMB)</option>
+                    <option value="puc_science_pcmc" ${AppState.selectedLevel === 'puc_science_pcmc' ? 'selected' : ''}>PUC Science (PCMC)</option>
+                    <option value="puc_commerce" ${AppState.selectedLevel === 'puc_commerce' ? 'selected' : ''}>PUC (Commerce)</option>
+                    <option value="puc_arts" ${AppState.selectedLevel === 'puc_arts' ? 'selected' : ''}>PUC (Arts)</option>
+                    <option value="diploma_polytechnic" ${AppState.selectedLevel === 'diploma_polytechnic' ? 'selected' : ''}>Polytechnic / Diploma</option>
+                    <option value="iti" ${AppState.selectedLevel === 'iti' ? 'selected' : ''}>ITI</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2.5rem;">
+                <label style="display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 500;">Interests</label>
+                <select id="edit-profile-interest" class="form-input" style="appearance: auto;">
+                    <option value="" ${!AppState.selectedInterest ? 'selected' : ''}>Not Selected</option>
+                    <option value="courses" ${AppState.selectedInterest === 'courses' ? 'selected' : ''}>Courses</option>
+                    <option value="exams" ${AppState.selectedInterest === 'exams' ? 'selected' : ''}>Exams</option>
+                    <option value="both" ${AppState.selectedInterest === 'both' ? 'selected' : ''}>Both</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-secondary" onclick="navigate('/profile')" style="flex: 1;">Cancel</button>
+                <button class="btn btn-primary" onclick="window.saveEditedProfile()" style="flex: 1;">Save Changes</button>
+            </div>
+        </div>
+    `;
+}
+
+// Temporary hold for a potential new avatar before saving
+window._tempProfileAvatar = null;
+
+window.handleAvatarUpload = function (input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+
+    // Size check (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        if (typeof NotificationManager !== 'undefined') {
+            NotificationManager.show('File too large. Maximum size is 5MB.', 'error');
+        } else {
+            alert('File too large. Maximum size is 5MB.');
+        }
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+            // Resize canvas
+            const canvas = document.createElement('canvas');
+            const MAX_SIZE = 200;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_SIZE) {
+                    height *= MAX_SIZE / width;
+                    width = MAX_SIZE;
+                }
+            } else {
+                if (height > MAX_SIZE) {
+                    width *= MAX_SIZE / height;
+                    height = MAX_SIZE;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw and compress to jpeg
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+            window._tempProfileAvatar = dataUrl;
+            document.getElementById('edit-profile-preview').src = dataUrl;
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+window.handleDirectAvatarUpload = function (input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+
+    if (file.size > 5 * 1024 * 1024) {
+        if (typeof NotificationManager !== 'undefined') {
+            NotificationManager.show('File too large. Maximum size is 5MB.', 'error');
+        } else {
+            alert('File too large. Maximum size is 5MB.');
+        }
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+            const canvas = document.createElement('canvas');
+            const MAX_SIZE = 200;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_SIZE) {
+                    height *= MAX_SIZE / width;
+                    width = MAX_SIZE;
+                }
+            } else {
+                if (height > MAX_SIZE) {
+                    width *= MAX_SIZE / height;
+                    height = MAX_SIZE;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+            // Update state and instantly save
+            AppState.profilePicture = dataUrl;
+            saveUserProfile();
+            window.updateNavbarAvatar();
+
+            const profileAvatarImg = document.getElementById('profile-main-avatar');
+            if (profileAvatarImg) {
+                profileAvatarImg.src = dataUrl;
+            }
+
+            if (typeof NotificationManager !== 'undefined') {
+                NotificationManager.show('Profile picture updated.', 'success');
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+window.saveEditedProfile = function () {
+    const nameInput = document.getElementById('edit-profile-name').value.trim();
+    const genderInput = document.getElementById('edit-profile-gender').value;
+    const contactInput = document.getElementById('edit-profile-contact').value.trim();
+    const levelInput = document.getElementById('edit-profile-level').value;
+    const interestInput = document.getElementById('edit-profile-interest').value;
+
+    // Quick validation
+    if (!nameInput) {
+        document.getElementById('edit-name-error').style.display = 'block';
+        return;
+    } else {
+        document.getElementById('edit-name-error').style.display = 'none';
+    }
+
+    const isEmail = AppState.authMethod === 'email';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9]{10}$/;
+
+    if (isEmail && !emailRegex.test(contactInput)) {
+        document.getElementById('edit-contact-error').style.display = 'block';
+        return;
+    } else if (!isEmail && !phoneRegex.test(contactInput)) {
+        document.getElementById('edit-contact-error').style.display = 'block';
+        return;
+    } else {
+        document.getElementById('edit-contact-error').style.display = 'none';
+    }
+
+    // Assign to state
+    AppState.userName = nameInput;
+    AppState.userGender = genderInput || null;
+    AppState.authValue = contactInput;
+    AppState.selectedLevel = levelInput || null;
+    AppState.selectedInterest = interestInput || null;
+
+    if (window._tempProfileAvatar) {
+        AppState.profilePicture = window._tempProfileAvatar;
+        window._tempProfileAvatar = null; // reset
+    }
+
+    // Persist and navigate
+    saveUserProfile();
+    window.updateNavbarAvatar();
+
+    if (typeof NotificationManager !== 'undefined') {
+        NotificationManager.show('Profile updated securely.', 'success');
+    }
+
+    navigate('/profile');
+};
 
 function renderLevelSelectScreen() {
     return `
@@ -697,11 +1228,19 @@ function renderResultsScreen() {
     return `
         <div id="results-container" style="max-width: 1000px; margin: 0 auto; padding: 1rem;">
             <!-- New Header Section -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                 <h3 style="font-size: 1.25rem; font-weight: 500; color: var(--text-main); margin: 0;">Hello, ${userName} 👋</h3>
-                <button onclick="window.editAllAnswers()" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                    <span data-i18n="btn_edit_answers">Edit Answers</span>
-                </button>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button onclick="window.handleSaveResults()" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <span data-i18n="save_my_recommendations">Save My Recommendations</span>
+                    </button>
+                    <button onclick="window.handleShareResults()" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <span data-i18n="share">Share</span>
+                    </button>
+                    <button onclick="window.editAllAnswers()" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <span data-i18n="btn_edit_answers">Edit Answers</span>
+                    </button>
+                </div>
             </div>
 
             <div class="glass-card" style="margin-bottom: 2rem; border-top: 4px solid var(--primary-color);">
@@ -725,11 +1264,85 @@ function renderResultsScreen() {
     `;
 }
 
+window.handleSaveResults = function () {
+    if (!AppState.topCourses || AppState.topCourses.length === 0) return;
+
+    const saveData = {
+        date: new Date().toISOString(),
+        answers: AppState.answers,
+        level: AppState.selectedLevel,
+        interest: AppState.selectedInterest,
+        topCourses: AppState.topCourses,
+        topExams: AppState.topExams
+    };
+    localStorage.setItem('saved_recommendation', JSON.stringify(saveData));
+
+    if (typeof NotificationManager !== 'undefined') {
+        NotificationManager.show('Recommendations saved successfully!', 'success');
+    } else {
+        alert('Recommendations saved successfully!');
+    }
+};
+
+window.handleShareResults = function () {
+    if (!AppState.topCourses || AppState.topCourses.length === 0) return;
+
+    const lang = AppState.language || 'en';
+    const userName = AppState.userName ? AppState.userName.split(' ')[0] : 'Student';
+    const dateStr = new Date().toLocaleDateString();
+
+    let text = `🎯 Career Recommendations for ${userName} (${dateStr})\n\n`;
+    text += `Based on your profile, here are your top matches:\n\n`;
+
+    if (AppState.topCourses && AppState.topCourses.length > 0) {
+        text += `📚 COURSES:\n`;
+        AppState.topCourses.forEach(c => {
+            text += `- ${c.title[lang]} (${c.confidenceScore}% Match)\n`;
+        });
+        text += `\n`;
+    }
+
+    if (AppState.topExams && AppState.topExams.length > 0) {
+        text += `🏛️ GOVT EXAMS:\n`;
+        AppState.topExams.forEach(e => {
+            text += `- ${e.title[lang]} (${e.confidenceScore}% Match)\n`;
+        });
+        text += `\n`;
+    }
+
+    text += `Disclaimer: These are guidance-only recommendations based on your inputs.`;
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            if (typeof NotificationManager !== 'undefined') {
+                NotificationManager.show('Share text copied to clipboard!', 'success');
+            } else {
+                alert('Share text copied to clipboard!');
+            }
+        }).catch(err => {
+            console.error('Failed to copy', err);
+            alert('Failed to copy to clipboard. Try again later.\n\n' + text);
+        });
+    } else {
+        alert(text);
+    }
+};
+
 // ---------------------------------------------------------
 // Admin Panel Screen
 // ---------------------------------------------------------
 
 function renderAdminScreen() {
+    if (AppState.userRole !== 'admin' && AppState.userRole !== 'super_admin') {
+        return `
+            <div class="onboarding-container" style="max-width: 800px; text-align: center;">
+                <h2 style="font-size: 1.5rem; font-weight: 700; color: #ef4444;">Access Denied</h2>
+                <p style="color: var(--text-muted); margin-top: 1rem;">You do not have permission to access the Administrator Panel.</p>
+                <button class="btn btn-primary" onclick="window.renderScreen('welcome')" style="margin-top: 2rem;">Return to Dashboard</button>
+            </div>
+        `;
+    }
+
     const lang = AppState.language;
     let html = `
         <div class="onboarding-container" style="max-width: 800px;">
@@ -851,14 +1464,14 @@ function attachScreenListeners(screenName) {
                         if (nameSuccessIcon) nameSuccessIcon.style.display = 'flex';
                     } else if (AppState.touched.name) {
                         nameInput.classList.remove('valid-input');
-                        nameInput.style.borderColor = '#334155'; // Keep neutral
+                        nameInput.style.borderColor = 'var(--border-color)'; // Keep neutral
                         if (nameErr) { nameErr.style.display = 'block'; nameErr.style.visibility = 'visible'; }
                         if (nameSuccess) nameSuccess.classList.remove('show');
                         if (nameSuccessIcon) nameSuccessIcon.style.display = 'none';
                     } else {
                         // Keep neutral if not touched
                         nameInput.classList.remove('valid-input');
-                        nameInput.style.borderColor = '#334155';
+                        nameInput.style.borderColor = 'var(--border-color)';
                         if (nameErr) { nameErr.style.display = 'block'; nameErr.style.visibility = 'hidden'; }
                         if (nameSuccess) nameSuccess.classList.remove('show');
                         if (nameSuccessIcon) nameSuccessIcon.style.display = 'none';
@@ -904,7 +1517,7 @@ function attachScreenListeners(screenName) {
                         if (contactSuccess) contactSuccess.classList.add('show');
                         if (contactSuccessIcon) contactSuccessIcon.style.display = 'flex';
                     } else {
-                        input.style.borderColor = '#334155';
+                        input.style.borderColor = 'var(--border-color)';
                         if (emailErr) emailErr.style.display = 'none';
                     }
                 } else {
@@ -915,11 +1528,11 @@ function attachScreenListeners(screenName) {
 
                         if (AppState.touched.contact) {
                             input.classList.remove('error-input');
-                            input.style.borderColor = '#334155'; // Keep neutral
+                            input.style.borderColor = 'var(--border-color)'; // Keep neutral
                             if (emailErr) { emailErr.style.display = 'block'; emailErr.style.visibility = 'visible'; }
                         } else {
                             input.classList.remove('error-input');
-                            input.style.borderColor = '#334155';
+                            input.style.borderColor = 'var(--border-color)';
                             if (emailErr) { emailErr.style.display = 'block'; emailErr.style.visibility = 'hidden'; }
                         }
                     } else {
@@ -930,7 +1543,7 @@ function attachScreenListeners(screenName) {
                             if (emailErr) emailErr.style.display = 'block';
                         } else {
                             input.classList.remove('error-input');
-                            input.style.borderColor = '#334155';
+                            input.style.borderColor = 'var(--border-color)';
                             if (emailErr) emailErr.style.display = 'none';
                         }
                     }
@@ -1104,6 +1717,27 @@ function attachScreenListeners(screenName) {
             if (val === '1234') {
                 AppState.isAuthenticated = true;
 
+                // Assign matching Role mapped to login value
+                let role = 'student';
+                const lowerAuth = typeof AppState.authValue === 'string' ? AppState.authValue.toLowerCase() : '';
+                if (lowerAuth.includes('superadmin') || lowerAuth === 'super@example.com') {
+                    role = 'super_admin';
+                } else if (lowerAuth.includes('admin') || lowerAuth === 'admin@example.com') {
+                    role = 'admin';
+                } else if (lowerAuth.includes('editor')) {
+                    role = 'editor';
+                }
+                AppState.userRole = role;
+
+                // Sync Visibility and Timers based on role
+                const adminMenuBtn = document.getElementById('menu-admin-panel');
+                if (role === 'admin' || role === 'super_admin') {
+                    if (adminMenuBtn) adminMenuBtn.style.display = 'block';
+                    startAdminInactivityTimer();
+                } else {
+                    if (adminMenuBtn) adminMenuBtn.style.display = 'none';
+                }
+
                 if (AppState.authType === 'signup') {
                     // Show success state for OTP
                     errorText.style.color = '#10b981';
@@ -1112,12 +1746,22 @@ function attachScreenListeners(screenName) {
 
                     // Delay transition to welcome screen
                     setTimeout(() => {
+                        // Re-load profile if it exists, otherwise save new one
+                        if (!AppState.dateJoined) {
+                            saveUserProfile();
+                        }
                         renderScreen('welcome');
                     }, 1500);
                 } else {
                     errorText.classList.remove('show');
+
+                    // Re-load profile if it exists, otherwise save new one
+                    if (!AppState.dateJoined) {
+                        saveUserProfile();
+                    }
+
                     // For sign in, skip the Welcome screen, go to level_select
-                    renderScreen('level_select');
+                    renderScreen('welcome');
                 }
             } else {
                 errorText.style.color = '#ef4444';
@@ -1250,6 +1894,9 @@ function attachScreenListeners(screenName) {
         const saveBtn = document.getElementById('admin-save-exams');
         if (saveBtn) {
             saveBtn.addEventListener('click', () => {
+                if (!confirm("Are you sure you want to save your exam changes? This modifies the global database!")) {
+                    return;
+                }
                 const blocks = document.querySelectorAll('.exam-edit-block');
                 const newUpdates = JSON.parse(JSON.stringify(AppData.examUpdates));
 
@@ -1277,7 +1924,224 @@ function attachScreenListeners(screenName) {
             });
         }
     }
+
+    if (screenName === 'edit_profile') {
+        window.saveEditedProfile = function () {
+            const nameInput = document.getElementById('edit-profile-name').value.trim();
+            const contactInput = document.getElementById('edit-profile-contact').value.trim();
+            const genderInput = document.getElementById('edit-profile-gender').value;
+            const levelInput = document.getElementById('edit-profile-level').value;
+            const interestInput = document.getElementById('edit-profile-interest').value;
+
+            let isValid = true;
+
+            // Validate Name
+            if (!nameInput) {
+                document.getElementById('edit-name-error').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('edit-name-error').style.display = 'none';
+            }
+
+            // Validate Contact
+            const isEmail = AppState.authMethod === 'email';
+            let contactValid = false;
+            if (isEmail) {
+                contactValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactInput);
+            } else {
+                contactValid = /^\d{10}$/.test(contactInput);
+            }
+
+            if (!contactValid) {
+                document.getElementById('edit-contact-error').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('edit-contact-error').style.display = 'none';
+            }
+
+            if (isValid) {
+                AppState.userName = nameInput;
+                AppState.authValue = contactInput;
+                AppState.userGender = genderInput || null;
+                AppState.selectedLevel = levelInput || null;
+                AppState.selectedInterest = interestInput || null;
+
+                saveUserProfile();
+                navigate('/profile');
+            }
+        };
+    }
 }
 
 // Start app on DOMContentLoaded
 window.addEventListener('DOMContentLoaded', initApp);
+
+// Global Auto-Logout Inactivity Handling
+window.adminActivityListenersBound = false;
+window.adminInactivityTimer = null;
+
+window.resetAdminInactivityTimer = function () {
+    if (window.adminInactivityTimer) clearTimeout(window.adminInactivityTimer);
+
+    // 15 mins
+    window.adminInactivityTimer = setTimeout(() => {
+        if (AppState.isAuthenticated && (AppState.userRole === 'admin' || AppState.userRole === 'super_admin')) {
+            alert('Your Admin Session has expired due to inactivity. You have been securely logged out.');
+            const logoutBtn = document.getElementById('menu-logout');
+            if (logoutBtn) logoutBtn.click();
+        }
+    }, 900000);
+};
+
+window.startAdminInactivityTimer = function () {
+    window.resetAdminInactivityTimer();
+    if (!window.adminActivityListenersBound) {
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
+            document.addEventListener(evt, resetAdminInactivityTimer);
+        });
+        window.adminActivityListenersBound = true;
+    }
+};
+
+// ---------------------------------------------------------
+// SUPPORT AND SETTINGS SCREENS
+// ---------------------------------------------------------
+
+function buildSupportHeader(title) {
+    return `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 class="screen-title" style="margin: 0; font-size: 1.5rem;">${title}</h2>
+            <button class="btn btn-secondary" onclick="navigate('/profile')" style="padding: 0.5rem 1rem; font-size: 0.875rem; white-space: nowrap;">Back</button>
+        </div>
+    `;
+}
+
+function renderHelpScreen() {
+    return `
+        <div class="glass-card" style="max-width: 900px; margin: 2rem auto; padding: 2rem;">
+            ${buildSupportHeader('Help & FAQ')}
+            <div class="profile-card-item" style="margin-bottom:1rem; height: auto;">
+                <div class="profile-card-label">How do I retake the assessment?</div>
+                <div class="profile-card-value" style="font-size: 1rem; font-weight: normal;">Go to the Profile Menu and select "Retake Assessment". This will guide you through the questions again.</div>
+            </div>
+            <div class="profile-card-item" style="margin-bottom:1rem; height: auto;">
+                <div class="profile-card-label">Can I change my registered email or mobile?</div>
+                <div class="profile-card-value" style="font-size: 1rem; font-weight: normal;">Yes, you can update your contact information from the "Edit Profile" screen.</div>
+            </div>
+            <div class="profile-card-item" style="margin-bottom:1rem; height: auto;">
+                <div class="profile-card-label">How do I switch to dark mode?</div>
+                <div class="profile-card-value" style="font-size: 1rem; font-weight: normal;">Click the moon/sun icon in the top right corner of the navigation bar to toggle between light and dark themes.</div>
+            </div>
+        </div>
+    `;
+}
+
+function renderContactScreen() {
+    return `
+        <div class="glass-card" style="max-width: 900px; margin: 2rem auto; padding: 2rem;">
+            ${buildSupportHeader('Contact Support')}
+            <div class="form-group">
+                <label class="profile-card-label" style="display:block; margin-bottom:0.5rem;">Your Name</label>
+                <input type="text" class="form-input" placeholder="Enter your name" value="${AppState.userName || ''}">
+            </div>
+            <div class="form-group">
+                <label class="profile-card-label" style="display:block; margin-bottom:0.5rem;">Email Address</label>
+                <input type="email" class="form-input" placeholder="Enter your email" value="${AppState.authMethod === 'email' ? AppState.authValue : ''}">
+            </div>
+            <div class="form-group">
+                <label class="profile-card-label" style="display:block; margin-bottom:0.5rem;">Message</label>
+                <textarea class="form-input" style="min-height: 120px; resize: vertical;" placeholder="How can we help you?"></textarea>
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="alert('Message sent successfully!'); navigate('/profile');">Send Message</button>
+        </div>
+    `;
+}
+
+function renderReportIssueScreen() {
+    return `
+        <div class="glass-card" style="max-width: 900px; margin: 2rem auto; padding: 2rem;">
+            ${buildSupportHeader('Report an Issue')}
+            <div class="form-group">
+                <label class="profile-card-label" style="display:block; margin-bottom:0.5rem;">Issue Title</label>
+                <input type="text" class="form-input" placeholder="Brief summary of the issue">
+            </div>
+            <div class="form-group">
+                <label class="profile-card-label" style="display:block; margin-bottom:0.5rem;">Description</label>
+                <textarea class="form-input" style="min-height: 120px; resize: vertical;" placeholder="Please describe the issue in detail..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="profile-card-label" style="display:block; margin-bottom:0.5rem;">Screenshot (Optional)</label>
+                <input type="file" class="form-input" accept="image/*" style="padding: 0.75rem; background: var(--card-bg);">
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="alert('Issue reported successfully!'); navigate('/profile');">Submit Bug Report</button>
+        </div>
+    `;
+}
+
+function renderFeedbackScreen() {
+    return `
+        <div class="glass-card" style="max-width: 900px; margin: 2rem auto; padding: 2rem;">
+            ${buildSupportHeader('Send Feedback')}
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">We value your suggestions. Let us know how we can improve the app!</p>
+            <div class="form-group">
+                <label class="profile-card-label" style="display:block; margin-bottom:0.5rem;">Your Feedback</label>
+                <textarea class="form-input" style="min-height: 150px; resize: vertical;" placeholder="Type your suggestions here..."></textarea>
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="alert('Thank you for your feedback!'); navigate('/profile');">Submit Feedback</button>
+        </div>
+    `;
+}
+
+function renderAboutScreen() {
+    return `
+        <div class="glass-card" style="max-width: 900px; margin: 2rem auto; padding: 2rem;">
+            ${buildSupportHeader('About App')}
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;">GuidancePro</h1>
+                <p style="color: var(--text-muted); font-size: 1.125rem;">Version 1.2.0-beta</p>
+            </div>
+            <div class="profile-grid">
+                <div class="profile-card-item">
+                    <div class="profile-card-label">Description</div>
+                    <div class="profile-card-value" style="font-size: 1rem; font-weight: normal;">An intelligent platform designed to help students discover the best career paths and exams tailored to their skills.</div>
+                </div>
+                <div class="profile-card-item">
+                    <div class="profile-card-label">Developer info</div>
+                    <div class="profile-card-value" style="font-size: 1rem; font-weight: normal;">Guidance App Team</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderPrivacyPolicyScreen() {
+    return `
+        <div class="glass-card" style="max-width: 900px; margin: 2rem auto; padding: 2rem;">
+            ${buildSupportHeader('Privacy Policy')}
+            <div style="color: var(--text-main); line-height: 1.6;">
+                <h3 style="margin-bottom: 0.5rem;">1. Information We Collect</h3>
+                <p style="margin-bottom: 1rem; color: var(--text-muted);">We collect information you provide directly to us, such as your name, contact info, and assessment answers to personalize your guidance.</p>
+                <h3 style="margin-bottom: 0.5rem;">2. Use of Information</h3>
+                <p style="margin-bottom: 1rem; color: var(--text-muted);">Your information is used to provide, maintain, and improve our services, including calculating personalized course recommendations.</p>
+                <h3 style="margin-bottom: 0.5rem;">3. Data Security</h3>
+                <p style="margin-bottom: 1rem; color: var(--text-muted);">We implement reasonable security practices to protect your information, but no method of transmission over the Internet is completely secure.</p>
+            </div>
+        </div>
+    `;
+}
+
+function renderTermsScreen() {
+    return `
+        <div class="glass-card" style="max-width: 900px; margin: 2rem auto; padding: 2rem;">
+            ${buildSupportHeader('Terms & Conditions')}
+            <div style="color: var(--text-main); line-height: 1.6;">
+                <h3 style="margin-bottom: 0.5rem;">1. Acceptance of Terms</h3>
+                <p style="margin-bottom: 1rem; color: var(--text-muted);">By accessing or using GuidancePro, you agree to be bound by these Terms. If you do not agree to all the terms, you must not access the application.</p>
+                <h3 style="margin-bottom: 0.5rem;">2. Advice Disclaimer</h3>
+                <p style="margin-bottom: 1rem; color: var(--text-muted);">Our recommendations are generated based on algorithms and are intended as guidance, not professional guarantees. Always verify details independently.</p>
+                <h3 style="margin-bottom: 0.5rem;">3. Modification of Services</h3>
+                <p style="margin-bottom: 1rem; color: var(--text-muted);">We reserve the right to modify or discontinue, temporarily or permanently, the Service with or without notice.</p>
+            </div>
+        </div>
+    `;
+}

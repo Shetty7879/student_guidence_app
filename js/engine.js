@@ -223,7 +223,8 @@ function calculateResults() {
             for (const [key, val] of Object.entries(c.weights)) {
                 score += (userProfileCourses[key] || 0) * val;
             }
-            return { ...c, matchScore: score };
+            let confidenceScore = Math.min(99, Math.max(60, Math.round(60 + (score * 4.5))));
+            return { ...c, matchScore: score, confidenceScore };
         })
         .sort((a, b) => b.matchScore - a.matchScore);
 
@@ -257,13 +258,20 @@ function calculateResults() {
                 }
             }
 
-            return { ...e, matchScore: score, dynamicLabel };
+            let confidenceScore = Math.min(99, Math.max(60, Math.round(60 + (score * 4.5))));
+            if (dynamicLabel) confidenceScore = Math.min(99, confidenceScore + 10); // Boost confidence if explicitly labeled
+
+            return { ...e, matchScore: score, dynamicLabel, confidenceScore };
         })
         .sort((a, b) => b.matchScore - a.matchScore);
 
     // Filter top 2-3 matches
     AppState.topCourses = scoredCourses.slice(0, 3);
     AppState.topExams = scoredExams.slice(0, 3);
+
+    // Store unmatched for negative explanation
+    AppState.unmatchedCourses = scoredCourses.slice(3, 6);
+    AppState.unmatchedExams = scoredExams.slice(3, 6);
 }
 
 function renderRecommendations() {
@@ -287,12 +295,12 @@ function renderRecommendations() {
             const aText = ans.ansText && ans.ansText[lang] ? ans.ansText[lang] : (ans.ansText && ans.ansText.en ? ans.ansText.en : 'Answer');
 
             ansHtml += `
-                <div class="glass-card" style="padding: 1rem; display: flex; justify-content: space-between; align-items: start; gap: 1rem; background: var(--surface-light); border-left: 3px solid var(--primary-color);">
-                    <div style="flex: 1;">
-                        <p style="font-size: 0.875rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem;">${qText}</p>
-                        <p style="font-size: 0.875rem; color: var(--primary-color); font-weight: 500; margin: 0;">${aText}</p>
+                <div class="glass-card ans-card">
+                    <div class="ans-content">
+                        <p class="ans-q-text">${qText}</p>
+                        <p class="ans-a-text">${aText}</p>
                     </div>
-                    <button class="btn btn-secondary" onclick="window.editSpecificAnswer(${idx})" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; border-radius: 6px; white-space: nowrap;">
+                    <button class="btn btn-secondary ans-edit-btn" onclick="window.editSpecificAnswer(${idx})">
                         <span data-i18n="btn_edit">Edit</span>
                     </button>
                 </div>
@@ -342,6 +350,53 @@ function renderRecommendations() {
         </div>
     `;
 
+    // Add unmatched / negative explainer
+    let unmatchedHtml = '';
+    const showCoursesAndHaveUnmatched = showCourses && AppState.unmatchedCourses && AppState.unmatchedCourses.length > 0;
+    const showExamsAndHaveUnmatched = showExams && AppState.unmatchedExams && AppState.unmatchedExams.length > 0;
+
+    if (showCoursesAndHaveUnmatched || showExamsAndHaveUnmatched) {
+        unmatchedHtml += `
+            <details style="margin-top: 3rem; background: var(--surface-light); border-radius: var(--radius-md); border: 1px solid var(--border-color); padding: 1.5rem;">
+                <summary style="font-size: 1.15rem; font-weight: 600; color: var(--text-main); cursor: pointer; outline: none; display: flex; align-items: center; justify-content: space-between;" class="unmatched-summary">
+                    <span data-i18n="why_not_other">Why not other options?</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">Click to expand</span>
+                </summary>
+                <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+        `;
+
+        if (showCoursesAndHaveUnmatched) {
+            AppState.unmatchedCourses.forEach(c => {
+                const explainer = generateNegativeWhyText(c.weights, lang);
+                unmatchedHtml += `
+                    <div style="padding: 1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--warning-color, #ff9800); background: rgba(255, 152, 0, 0.05);">
+                        <p style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem;">${c.title[lang]}</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">${explainer}</p>
+                    </div>
+                `;
+            });
+        }
+
+        if (showExamsAndHaveUnmatched) {
+            AppState.unmatchedExams.forEach(e => {
+                const explainer = generateNegativeWhyText(e.weights, lang);
+                unmatchedHtml += `
+                    <div style="padding: 1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--warning-color, #ff9800); background: rgba(255, 152, 0, 0.05);">
+                        <p style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem;">${e.title[lang]}</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">${explainer}</p>
+                    </div>
+                `;
+            });
+        }
+
+        unmatchedHtml += `
+                </div>
+            </details>
+        `;
+    }
+
+    html += unmatchedHtml;
+
     listContainer.innerHTML = html;
     updateTranslations();
 
@@ -356,9 +411,27 @@ function createResultCard(item, lang, uniqueId) {
     // Store item globally so modal can access it easily without complex state
     window[`itemData_${uniqueId}`] = item;
 
+    let confLabel = Translations[lang]?.good_match || 'Good Match';
+    let confColor = 'var(--success-color, #4caf50)';
+    if (item.confidenceScore >= 85) {
+        confLabel = Translations[lang]?.strong_match || 'Strong Match';
+        confColor = 'var(--primary-color, #4f46e5)';
+    } else if (item.confidenceScore < 75) {
+        confLabel = Translations[lang]?.fair_match || 'Fair Match';
+        confColor = 'var(--warning-color, #ff9800)';
+    }
+
+    const confTitle = Translations[lang]?.match_confidence || 'Match Confidence';
+
     return `
         <div class="glass-card" style="margin-bottom: 1rem; padding: 1.5rem; animation: slideUp 0.5s ease forwards;">
-            <h4 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">${item.title[lang]}</h4>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem;">
+                <h4 style="font-size: 1.25rem; font-weight: 600; margin: 0;">${item.title[lang]}</h4>
+                <div style="background: ${confColor}15; border: 1px solid ${confColor}30; padding: 0.25rem 0.5rem; border-radius: 20px; text-align: right; min-width: max-content;">
+                    <span style="display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">${confTitle}</span>
+                    <span style="display: block; font-size: 0.85rem; color: ${confColor}; font-weight: 700;">${item.confidenceScore}% – ${confLabel}</span>
+                </div>
+            </div>
             <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">${item.description[lang]}</p>
             
             ${item.dynamicLabel ? `
@@ -377,6 +450,43 @@ function createResultCard(item, lang, uniqueId) {
             </button>
         </div>
     `;
+}
+
+function generateNegativeWhyText(weights, lang) {
+    const keys = Object.keys(weights).sort((a, b) => weights[b] - weights[a]);
+    const topTrait = keys[0];
+
+    const explanations = {
+        en: {
+            math_sci: "You showed lower interest in analytical and heavy science subjects.",
+            physical: "You requested paths that don't revolve around intense physical fitness.",
+            govt: "You preferred faster-paced or private sector opportunities over government roles.",
+            practical: "You leaned more towards theoretical or office-based learning styles.",
+            commerce: "You favored non-business or non-financial career paths.",
+            arts: "Your interests aligned more strictly with technical or quantitative fields.",
+            private: "You leaned towards the stability of government or public sector roles."
+        },
+        hi: {
+            math_sci: "आपने विश्लेषणात्मक और भारी विज्ञान विषयों में कम रुचि दिखाई।",
+            physical: "आपने उन रास्तों का अनुरोध किया जो शारीरिक फिटनेस के इर्द-गिर्द नहीं घूमते हैं।",
+            govt: "आपने सरकारी भूमिकाओं के बजाय निजी क्षेत्र के अवसरों को प्राथमिकता दी।",
+            practical: "आपका झुकाव सैद्धांतिक या कार्यालय आधारित सीखने की शैली की ओर अधिक था।",
+            commerce: "आपने गैर-व्यावसायिक या गैर-वित्तीय करियर पथ का पक्ष लिया।",
+            arts: "आपकी रुचियां तकनीकी या मात्रात्मक क्षेत्रों के साथ अधिक संरेखित हैं।",
+            private: "आपका झुकाव सरकारी या सार्वजनिक क्षेत्र की भूमिकाओं की स्थिरता की ओर है।"
+        },
+        kn: {
+            math_sci: "ನೀವು ವಿಶ್ಲೇಷಣಾತ್ಮಕ ಮತ್ತು ವಿಜ್ಞಾನ ವಿಷಯಗಳಲ್ಲಿ ಕಡಿಮೆ ಆಸಕ್ತಿ ತೋರಿದ್ದೀರಿ.",
+            physical: "ದೈಹಿಕ ಸಾಮರ್ಥ್ಯದ ಸುತ್ತ ಸುತ್ತದ ಮಾರ್ಗಗಳನ್ನು ನೀವು ವಿನಂತಿಸಿದ್ದೀರಿ.",
+            govt: "ನೀವು ಸರ್ಕಾರಿ ಪಾತ್ರಗಳಿಗಿಂತ ಖಾಸಗಿ ವಲಯದ ಅವಕಾಶಗಳಿಗೆ ಆದ್ಯತೆ ನೀಡಿದ್ದೀರಿ.",
+            practical: "ನೀವು ಸೈದ್ಧಾಂತಿಕ ಅಥವಾ ಕಚೇರಿ ಆಧಾರಿತ ಕಲಿಕಾ ಶೈಲಿಗಳ ಕಡೆಗೆ ಹೆಚ್ಚು ಒಲವು ತೋರಿದ್ದೀರಿ.",
+            commerce: "ನೀವು ವ್ಯಾಪಾರೇತರ ಅಥವಾ ಹಣಕಾಸೇತರ ವೃತ್ತಿ ಮಾರ್ಗಗಳಿಗೆ ಒಲವು ತೋರಿದ್ದೀರಿ.",
+            arts: "ನಿಮ್ಮ ಆಸಕ್ತಿಗಳು ತಾಂತ್ರಿಕ ಕ್ಷೇತ್ರಗಳಿಗೆ ಹೆಚ್ಚು ಹೊಂದಿಕೆಯಾಗುತ್ತವೆ.",
+            private: "ನೀವು ಸರ್ಕಾರಿ ಅಥವಾ ಸಾರ್ವಜನಿಕ ವಲಯದ ಪಾತ್ರಗಳ ಕಡೆಗೆ ಒಲವು ತೋರಿದ್ದೀರಿ."
+        }
+    };
+
+    return (explanations[lang] && explanations[lang][topTrait]) ? explanations[lang][topTrait] : (explanations.en[topTrait] || "Your interests align better with other areas.");
 }
 
 function generateWhyText(weights, lang) {

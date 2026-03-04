@@ -402,11 +402,22 @@
     transition: var(--transition-fast);
     display: flex;
     align-items: center;
+    gap: 0.75rem;
+}
+
+.dropdown-item svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: var(--transition-fast);
 }
 
 .dropdown-item:hover {
     background: rgba(79, 70, 229, 0.05);
     color: var(--primary-color);
+}
+
+.dropdown-item:hover svg {
+    opacity: 1;
 }
 
 .dropdown-item.logout-item {
@@ -425,4 +436,219 @@
         left: 1rem;
         width: auto;
     }
+}
+
+/* Answer Card Components (For Your Answers Section) */
+.ans-card {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 1rem;
+    background: var(--surface-light);
+    border-left: 3px solid var(--primary-color);
+}
+
+.ans-content {
+    flex: 1;
+}
+
+.ans-q-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.25rem;
+}
+
+.ans-a-text {
+    font-size: 0.875rem;
+    color: var(--primary-color);
+    font-weight: 500;
+    margin: 0;
+}
+
+.ans-edit-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+/* Mobile optimizations for Answer Cards */
+@media (max-width: 768px) {
+    .ans-card {
+        flex-direction: column;
+        gap: 0.25rem;
+        position: relative;
+        padding: 0.75rem;
+        /* Reduce vertical padding inside cards */
+        align-items: stretch;
+    }
+
+    .ans-content {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .ans-q-text {
+        width: 100%;
+        max-width: 100%;
+        font-size: 0.825rem;
+        /* Slightly smaller than desktop */
+        line-height: 1.4;
+        /* Increase line-height slightly for readability */
+        white-space: normal;
+        word-wrap: normal;
+        overflow-wrap: break-word;
+        word-break: normal;
+        /* Natural word wrap */
+        padding-right: 3.5rem;
+        /* Space for absolute edit button */
+        margin-bottom: 0;
+    }
+
+    .ans-a-text {
+        font-size: 0.825rem;
+        margin-top: 0.25rem;
+        /* Immediately below question */
+    }
+
+    .ans-edit-btn {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        padding: 0.25rem 0.6rem;
+        /* Small Edit text button */
+        font-size: 0.7rem;
+        width: auto;
+        /* Do NOT stretch Edit button full width */
+        align-self: flex-start;
+    }
+}
+
+/* Responsive Profile Grid */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 601px) {
+    .profile-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.edit-profile-btn-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.edit-profile-btn {
+    width: 100%;
+}
+
+@media (min-width: 1025px) {
+    .edit-profile-btn {
+        width: 65%;
+    }
+}
+
+.profile-card-item {
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.profile-card-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.profile-card-value {
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--text-main);
+    word-break: break-word;
+}
+
+/* Avatar Styles */
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+.avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto;
+    border: 3px solid var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: transparent;
+    /* Hides alt text if image fails to load */
+}
+
+@media (min-width: 601px) {
+    .avatar-large {
+        width: 90px;
+        height: 90px;
+    }
+}
+
+@media (min-width: 1025px) {
+    .avatar-large {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+.avatar-upload-wrapper {
+    position: relative;
+    width: max-content;
+    margin: 0 auto 2rem auto;
+    display: flex;
+    justify-content: center;
+}
+
+.avatar-upload-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: var(--transition-fast);
+    color: var(--btn-text);
+    border: 2px solid var(--card-bg);
+}
+
+.avatar-upload-btn:hover {
+    transform: scale(1.1);
+}
+
+.avatar-hidden-input {
+    display: none;
 }
